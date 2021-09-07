@@ -1,0 +1,106 @@
+{
+    "dt": {
+        "features:3_cv_mean": 0.8416666666666666,
+        "features:3_cv_std": 0.15229722402080886,
+        "features:3_feature_names": [
+            296,
+            352,
+            675
+        ],
+        "features:4_cv_mean": 0.7916666666666667,
+        "features:4_cv_std": 0.13176156917368248,
+        "features:4_feature_names": [
+            5,
+            264,
+            296,
+            400
+        ],
+        "features:5_cv_mean": 0.9,
+        "features:5_cv_std": 0.09354143466934853,
+        "features:5_feature_names": [
+            11,
+            156,
+            296,
+            399,
+            1181
+        ]
+    },
+    "rf": {
+        "features:3_cv_mean": 0.975,
+        "features:3_cv_std": 0.03061862178478973,
+        "features:3_feature_names": [
+            95,
+            309,
+            358
+        ],
+        "features:4_cv_mean": 0.9625,
+        "features:4_cv_std": 0.049999999999999996,
+        "features:4_feature_names": [
+            220,
+            358,
+            692,
+            722
+        ],
+        "features:5_cv_mean": 1.0,
+        "features:5_cv_std": 0.0,
+        "features:5_feature_names": [
+            309,
+            358,
+            836,
+            981,
+            1176
+        ]
+    },
+    "qda": {
+        "features:3_cv_mean": 0.875,
+        "features:3_cv_std": 0.11180339887498948,
+        "features:3_feature_names": [
+            60,
+            358,
+            811
+        ],
+        "features:4_cv_mean": 0.85,
+        "features:4_cv_std": 0.09354143466934853,
+        "features:4_feature_names": [
+            61,
+            145,
+            172,
+            811
+        ],
+        "features:5_cv_mean": 0.875,
+        "features:5_cv_std": 0.07905694150420949,
+        "features:5_feature_names": [
+            259,
+            487,
+            561,
+            800,
+            811
+        ]
+    },
+    "adab": {
+        "features:3_cv_mean": 0.9541666666666666,
+        "features:3_cv_std": 0.06508541396588877,
+        "features:3_feature_names": [
+            563,
+            1106,
+            1115
+        ],
+        "features:4_cv_mean": 0.975,
+        "features:4_cv_std": 0.03061862178478973,
+        "features:4_feature_names": [
+            563,
+            735,
+            1106,
+            1115
+        ],
+        "features:5_cv_mean": 1.0,
+        "features:5_cv_std": 0.0,
+        "features:5_feature_names": [
+            97,
+            563,
+            735,
+            1106,
+            1115
+        ]
+    }
+}
