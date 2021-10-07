@@ -1,0 +1,48 @@
+{
+    "Feature_Train_Path": {
+        "feature_set1_path": "../features/batch1_class0_new.xlsx",
+        "feature_set2_path": "../features/batch1_class1_new.xlsx",
+        "feature_set3_path": "../features/batch2_new.xlsx",
+        "feature_set4_path": null,
+        "feature_set5_path": null
+    },
+    "Feature_Test_Path": {
+        "feature_set_test": "../features/batch2_new.xlsx"
+    },
+    "Training_Params": {
+        "seed_val": 150,
+        "n_fold_split": 5,
+        "kf_repeat": 10,
+        "data_normalization": true,
+        "test_labels_available": false
+    },
+    "Model_Params": {
+        "n_estimators": 100,
+        "depth_max": 10
+    },
+    "Feature_Selection_Params": {
+        "n_selecting_features": [
+            3,
+            5,
+            8,
+            10,
+            15,
+            20,
+            25,
+            30
+        ]
+    },
+    "Analysis_After_SFS": {
+        "n_top_features": 3,
+        "model_with_SFS": "rf",
+        "feature_selection_log_name": "Mean_set_SFS_NewSet_.json"
+    },
+    "Learning_Algorithm": {
+        "rf_model": true,
+        "dt_model": false,
+        "adab_model": false,
+        "lda_model": false,
+        "qda_model": false,
+        "naive_model": false
+    }
+}
