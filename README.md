@@ -24,10 +24,10 @@ A quick intro:
     
     8-6) "Analysis_After_SFS" these parameters will be used only when running ./run/3_SFS_analysis.py or ./run/4_SFS_analysis_prediction.py
     
-          **define the number of features to be recalled from the log files
+          define the number of features to be recalled from the log files
           
-          **define the name of the learning algorithm that was used to extract the selected featurs choosen from [rf,dt,adab,lda,qda,naive,adab]
+          define the name of the learning algorithm that was used to extract the selected featurs choosen from [rf,dt,adab,lda,qda,naive,adab]
           
-          **define the name of the log file of feature selection to be recalled.
+          define the name of the log file of feature selection to be recalled.
           
    8-7) "Learning_Algorithm" section: here you set the boolean flag for the model to be used for the analysis.
