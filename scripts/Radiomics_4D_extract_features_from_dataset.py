@@ -47,7 +47,7 @@ EPILOG = dedent(
     """
     Example call:
     ::
-        {filename} -i /path/to/input_data_folder --config-file Radiomics_4D_config.json  --feature-param-file params.yaml  --output-file /home/Radiomics_features.xlsx
+        {filename} -i /path/to/input_data_folder --config-file Radiomics_4D_config.json  --feature-param-file params.yaml  --output-file Radiomics_features.xlsx
     """.format(  # noqa: E501
         filename=Path(__file__).name
     )
