@@ -1,0 +1,8 @@
+{
+  "image_suffix": "_cropped.nii.gz",
+  "mask_suffix": "_mask.nii.gz",
+  "label_dict": {
+    "0": "non-pCR",
+    "1": "pCR"
+  }
+}
