@@ -23,17 +23,31 @@ TIMESTAMP = "{:%Y-%m-%d_%H-%M-%S}".format(datetime.datetime.now())
 
 DESC = dedent(
     """
-    Run nnUNet pipeline:
-        Data and folder preparation -> Preprocessing -> Training -> Testing set Prediction -> Testing Set Metric Evaluation.
-
+    Run 4D Radiomics Feature extraction for the specified dataset. The Dataset tree should be in the following format:
+    ::
+        -Dataset_folder
+        --Class_0
+        ---Subject_ID_0
+        ----Subject_ID_0_image.nii.gz
+        ----Subject_ID_0_mask.nii.gz
+        ---Subject_ID_1
+        ----Subject_ID_1_image.nii.gz
+        ----Subject_ID_1_mask.nii.gz
+        --Class_1
+        ---Subject_ID_2
+        ----Subject_ID_2_image.nii.gz
+        ----Subject_ID_2_mask.nii.gz
+        ---Subject_ID_3
+        ----Subject_ID_3_image.nii.gz
+        ----Subject_ID_3_mask.nii.gz
+    The extracted features are stored in a Pandas DataFrame and they can be saved in an Excel, CSV or Pickle format.
     """  # noqa: E501
 )
 EPILOG = dedent(
     """
     Example call:
     ::
-        {filename} -i /path/to/input_data_folder --config-file LungLobeSeg_nnUNet_3D_config.json
-        {filename} -i /path/to/input_data_folder --config-file LungLobeSeg_nnUNet_3D_config.json  --task-ID 106 --test-split 25
+        {filename} -i /path/to/input_data_folder --config-file Radiomics_4D_config.json  --feature-param-file params.yaml  --output-file /home/Radiomics_features.xlsx
     """.format(  # noqa: E501
         filename=Path(__file__).name
     )
@@ -63,7 +77,8 @@ def get_arg_parser():
         "--feature-param-file",
         type=str,
         required=True,
-        help="YAML Feature Paramaters filename, used to create the Radiomics Feature Extractor.",
+        default="params.yaml",
+        help="YAML Feature Paramaters filename, used to create the Radiomics Feature Extractor (Default: params.yaml).",
     )
 
     pars.add_argument(
