@@ -34,7 +34,7 @@
     },
     "Analysis_After_SFS": {
         "n_top_features": 3,
-        "model_with_SFS": "rf",
+        "model_with_SFS": "rf",  
         "feature_selection_log_name": "Mean_set_SFS_NewSet_.json"
     },
     "Learning_Algorithm": {
