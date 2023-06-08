@@ -4,6 +4,7 @@ import numpy
 import numpy as np
 from pandas import DataFrame
 from sklearn import preprocessing
+from sklearn.model_selection import train_test_split
 
 
 def get_feature_set_details(feature_set: DataFrame) -> Tuple[List[Any], List[Any], List[Any], List[Any]]:
@@ -46,7 +47,9 @@ def get_feature_set_details(feature_set: DataFrame) -> Tuple[List[Any], List[Any
             if feature_set_subject.values.shape[0] > 0:
                 sequence_feature_list.append(feature_set_subject.values)
             else:
-                sequence_feature_list.append(np.empty((1, feature_set_subject.values.shape[1])))
+                nan_array = numpy.empty((1, feature_set_subject.values.shape[1]))
+                nan_array[:] = numpy.nan
+                sequence_feature_list.append(nan_array)
         feature_list.append(sequence_feature_list)
 
     feature_set_names = feature_set.copy(deep=True)
@@ -83,12 +86,13 @@ def get_4D_feature_stats(feature_list: List[List[Any]]) -> Tuple[
         Mean Sequence Array, SD Sequence Array, Sum Sequence Array, Mean Delta Array.
     """
     feature_arrays = np.array(feature_list).squeeze(axis=-2)
-    mean_features = np.mean(feature_arrays, axis=0)
-    sum_features = np.sum(feature_arrays, axis=0)
-    std_features = np.std(feature_arrays, axis=0)
+
+    mean_features = np.nanmean(feature_arrays, axis=0)
+    sum_features = np.nansum(feature_arrays, axis=0)
+    std_features = np.nanstd(feature_arrays, axis=0)
 
     delta_features = np.absolute(np.subtract(feature_arrays, mean_features))
-    mean_delta_features = np.mean(delta_features, axis=0)
+    mean_delta_features = np.nanmean(delta_features, axis=0)
 
     return mean_features, sum_features, std_features, mean_delta_features
 
@@ -132,7 +136,7 @@ def flatten_4D_features(feature_list: List[List[Any]], feature_names: List[str])
 
 
 def data_shuffling(feature_set: numpy.ndarray, label_set: numpy.ndarray, seed_val: int) -> Tuple[
-    numpy.ndarray, numpy.ndarray]:
+    numpy.ndarray, numpy.ndarray, numpy.ndarray, numpy.ndarray]:
     """
     Function to randomly shuffle the feature set and the corresponding label set along the subject dimension.
 
@@ -149,13 +153,10 @@ def data_shuffling(feature_set: numpy.ndarray, label_set: numpy.ndarray, seed_va
     -------
         Shuffled Feature set and Label Set
     """
-    case_list = np.arange(label_set.shape[0])
-    np.random.seed(seed_val)
-    np.random.shuffle(case_list)
-    feature_set = feature_set[case_list]
-    label_set = label_set[case_list]
+    X_train, X_test, y_train, y_test = train_test_split(
+        feature_set, label_set, test_size=15, random_state=seed_val)
 
-    return feature_set, label_set
+    return X_train, y_train, X_test, y_test
 
 
 def feature_normalization(x_train: numpy.ndarray, x_val: numpy.ndarray = None, x_test: numpy.ndarray = None) -> Tuple[
