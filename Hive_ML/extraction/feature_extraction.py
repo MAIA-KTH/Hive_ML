@@ -16,7 +16,7 @@ def extract_features_for_image_and_mask(extractor, image_filename: Union[str, Pa
     """
     Extract Radiomics for a given image (or list of images), and the corresponding binary mask.
     If a distance map is specified, extract radiomics at each depth interval, specified by ``n_bins``.
-    ``image_filename```can be a 3D volume, a 4D volume or a list of 3D volumes.
+    ``image_filename`` can be a 3D volume, a 4D volume or a list of 3D volumes.
 
     Example:
         with n_bins=3, Radiomics are extracted at 3 depth interval: 0-33%, 34-66% and 67-100% of the maximum depth.
