@@ -53,7 +53,7 @@ def load_feature_set(feature_set_filename: Union[str, PathLike], get_4D_stats: b
     if flatten_features:
         feature_list, feature_names = flatten_4D_features(feature_list, feature_names)
     if select_T is not None:
-        feature_list = np.array(feature_list)[int(select_T), :, :]
+        feature_list = np.array(feature_list).squeeze(axis=-2)[int(select_T), :, :]
 
     return np.array(
         feature_list), subject_ids, subject_labels, feature_names, mean_features, sum_features, std_features, mean_delta_features
