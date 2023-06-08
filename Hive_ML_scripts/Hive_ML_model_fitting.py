@@ -4,6 +4,7 @@ import datetime
 import importlib.resources
 import json
 import os
+import warnings
 from argparse import ArgumentParser, RawTextHelpFormatter
 from pathlib import Path
 from textwrap import dedent
@@ -16,18 +17,30 @@ from Hive.utils.log_utils import (
     log_lvl_from_verbosity_args,
 
 )
-from mlxtend.feature_selection import SequentialFeatureSelector as SFS
 from sklearn import preprocessing
+
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
+from tqdm.notebook import tqdm
+from sklearn.metrics import classification_report
+from sklearn.metrics import roc_auc_score
+
 from sklearn.model_selection import StratifiedKFold
 from tqdm import tqdm
 
 import Hive_ML.configs
 from Hive_ML.data_loader.feature_loader import load_feature_set
+from Hive_ML.training.model_trainer import model_fit_and_predict
 from Hive_ML.training.models import adab_tree, random_forest, knn, decicion_tree, lda, qda, naive, svm_kernel, \
     logistic_regression, ridge, mlp
 from Hive_ML.utilities.feature_utils import data_shuffling, feature_normalization
 
 TIMESTAMP = "{:%Y-%m-%d_%H-%M-%S}".format(datetime.datetime.now())
+
+COMPOSED_METRICS = {
+    "sensitivity": lambda x: x["1"]["recall"],
+    "specificity": lambda x: x["0"]["recall"]
+}
 
 MODELS = {
     "rf": random_forest,
@@ -45,8 +58,8 @@ MODELS = {
 
 DESC = dedent(
     """
-    Script to run Sequential 5-CV Forward Feature Selection on a Feature Set. The SFFS summary (in JSON format) is saved
-    in the experiment folder, defined by the ``experiment_name`` argument.
+    Script to run 5-CV Forward Model Fitting (after performing Feature Selection) on a Feature Set. The Metrics evaluation
+    summary (in Excel format) is saved in the experiment folder, defined by the ``experiment_name`` argument.
     """  # noqa: E501
 )
 EPILOG = dedent(
@@ -84,7 +97,7 @@ def get_arg_parser():
         "--experiment-name",
         type=str,
         required=True,
-        help="Experiment name used to save the SFFS summary.",
+        help="Experiment name used to save the model fitting metrics evaluation summary.",
     )
 
     add_verbosity_options_to_argparser(pars)
@@ -110,9 +123,8 @@ def main():
             with open(json_path) as json_file:
                 config_dict = json.load(json_file)
 
-    selected_features = {}
-
     models = config_dict["models"]
+    metrics = ["accuracy", "roc_auc", "specificity", "sensitivity"]
 
     aggregation = "Flat"
     stats_4D = False
@@ -161,7 +173,6 @@ def main():
 
         filtered_feature_set = []
         filtered_feature_names = []
-
         features = np.nan_to_num(features)
         for feature in range(n_features):
             exclude = False
@@ -193,81 +204,140 @@ def main():
         "FS")
     experiment_dir.mkdir(parents=True, exist_ok=True)
 
+    n_features = config_dict["n_features"]
+    if n_features > train_feature_set.shape[1]:
+        n_features = train_feature_set.shape[1]
+
     n_iterations = 0
     for classifier in models:
         if classifier in ["rf", "adab"]:
-            n_iterations += 1
-        else:
             n_iterations += config_dict["n_folds"]
+        else:
+            n_iterations += config_dict["n_folds"] * n_features
+
+    with open(Path(os.environ["ROOT_FOLDER"]).joinpath(
+            experiment_name,
+            config_dict["feature_selection"],
+            aggregation, "FS",
+            f"{experiment_name}_FS_summary.json"),
+            'rb') as fp:
+        feature_selection = json.load(fp)
 
     pbar = tqdm(total=n_iterations)
+
+    df_summary = pd.DataFrame()
 
     tr_feature_set = train_feature_set
     if len(tr_feature_set.shape) > 2:
         tr_feature_set = np.swapaxes(train_feature_set, 0, 1)
+
     for classifier in models:
+        pbar.set_description(f"{classifier}, Model Fitting")
         if classifier in ["rf", "adab"]:
-            pbar.update(1)
-            continue
-        selected_features[classifier] = {}
-        kf = StratifiedKFold(n_splits=config_dict["n_folds"], random_state=config_dict["random_seed"], shuffle=True)
-        for fold, (train_index, _) in enumerate(kf.split(tr_feature_set, train_label_set)):
-            pbar.set_description(f"{classifier}, fold {fold} FS")
-            fs_summary = Path(experiment_dir).joinpath(f"FS_summary_{classifier}_fold_{fold}.json")
-            if fs_summary.is_file():
-                with open(fs_summary, "r") as f:
-                    selected_features[classifier][fold] = json.load(f)
+            n_features = "All"
+        else:
+            n_features = config_dict["n_features"]
+            if n_features > train_feature_set.shape[-1]:
+                n_features = train_feature_set.shape[-1]
+        if n_features != "All":
+            for n_feature in range(1, n_features + 1):
+                kf = StratifiedKFold(n_splits=config_dict["n_folds"], random_state=config_dict["random_seed"],
+                                     shuffle=True)
+                for fold, (train_index, val_index) in enumerate(kf.split(tr_feature_set, train_label_set)):
 
-            else:
+                    x_train = tr_feature_set[train_index, :]
+                    x_val = tr_feature_set[val_index, :]
+                    y_train = train_label_set[train_index]
+                    y_val = train_label_set[val_index]
+
+                    if len(x_train.shape) > 2:
+                        for t in range(x_train.shape[1]):
+                            min_max_norm = preprocessing.MinMaxScaler(feature_range=(0, 1))
+                            x_train[:, t, :] = min_max_norm.fit_transform(x_train[:, t, :])
+                            x_val[:, t, :] = min_max_norm.transform(x_val[:, t, :])
+
+                    if aggregation == "Mean_Norm":
+                        x_train = np.nanmean(x_train, axis=1)
+                        x_val = np.nanmean(x_val, axis=1)
+
+                    if config_dict["feature_selection"] == "SFFS":
+
+                        selected_features = feature_selection[classifier][str(fold)][str(n_feature)]["feature_names"]
+                        train_feature_name_list = list(feature_names)
+
+                        feature_idx = []
+
+                        for selected_feature in selected_features:
+                            feature_idx.append(train_feature_name_list.index(selected_feature))
+
+                        x_train = x_train[:, feature_idx]
+
+                        x_val = x_val[:, feature_idx]
+
+                    x_train, x_val, _ = feature_normalization(x_train, x_val)
+                    clf = MODELS[classifier](**models[classifier])
+
+                    y_val_pred = model_fit_and_predict(clf, x_train, y_train, x_val)
+
+                    roc_auc_val = roc_auc_score(y_val, y_val_pred[:, 1])
+
+                    report = classification_report(y_val,
+                                                   np.where(y_val_pred[:, 1] > 0.5, 1, 0), output_dict=True)
+                    report["roc_auc"] = roc_auc_val
+
+                    for metric in metrics:
+                        if metric not in report:
+                            report[metric] = COMPOSED_METRICS[metric](report)
+                        df_summary = df_summary.append(
+                            {"Value": report[metric], "Classifier": classifier, "Metric": metric,
+                             "Fold": str(fold),
+                             "N_Features": n_feature,
+                             "Experiment": experiment_name + "_" + config_dict["feature_selection"] + "_" + aggregation
+                             }, ignore_index=True)
+                    pbar.update(1)
+        else:
+            kf = StratifiedKFold(n_splits=config_dict["n_folds"], random_state=config_dict["random_seed"], shuffle=True)
+            for fold, (train_index, val_index) in enumerate(kf.split(tr_feature_set, train_label_set)):
+
                 x_train = tr_feature_set[train_index, :]
-
+                x_val = tr_feature_set[val_index, :]
                 y_train = train_label_set[train_index]
+                y_val = train_label_set[val_index]
 
                 if len(x_train.shape) > 2:
                     for t in range(x_train.shape[1]):
                         min_max_norm = preprocessing.MinMaxScaler(feature_range=(0, 1))
                         x_train[:, t, :] = min_max_norm.fit_transform(x_train[:, t, :])
+                        x_val[:, t, :] = min_max_norm.transform(x_val[:, t, :])
 
                 if aggregation == "Mean_Norm":
                     x_train = np.nanmean(x_train, axis=1)
                 elif aggregation == "SD_Norm":
                     x_train = np.nanstd(x_train, axis=1)
 
-                n_features = config_dict["n_features"]
-                if n_features > x_train.shape[1]:
-                    n_features = x_train.shape[1]
-
-                x_train, _, _ = feature_normalization(x_train)
-
+                x_train, x_val, _ = feature_normalization(x_train, x_val)
                 clf = MODELS[classifier](**models[classifier])
-                sffs_model = SFS(clf,
-                                 k_features=n_features,
-                                 forward=True,
-                                 floating=True,
-                                 scoring='roc_auc',
-                                 verbose=0,
-                                 n_jobs=-1,
-                                 cv=5)
-                df_features_x = pd.DataFrame()
-                for x_train_row in x_train:
-                    df_row = {}
-                    for idx, feature_name in enumerate(feature_names):
-                        df_row[feature_name] = x_train_row[idx]
-                    df_features_x = df_features_x.append(df_row, ignore_index=True)
 
-                sffs = sffs_model.fit(df_features_x, y_train)
+                y_val_pred = model_fit_and_predict(clf, x_train, y_train, x_val)
 
-                sffs_features = sffs.subsets_
-                for key in sffs_features:
-                    sffs_features[key]['cv_scores'] = sffs_features[key]['cv_scores'].tolist()
+                roc_auc_val = roc_auc_score(y_val, y_val_pred[:, 1])
 
-                selected_features[classifier][fold] = sffs_features
-                with open(fs_summary, "w") as f:
-                    json.dump(sffs_features, f)
-            pbar.update(1)
+                report = classification_report(y_val,
+                                               np.where(y_val_pred[:, 1] > 0.5, 1, 0), output_dict=True)
+                report["roc_auc"] = roc_auc_val
 
-    with open(str(Path(experiment_dir).joinpath(f"{experiment_name}_FS_summary.json")), "w") as f:
-        json.dump(selected_features, f)
+                for metric in metrics:
+                    if metric not in report:
+                        report[metric] = COMPOSED_METRICS[metric](report)
+                    df_summary = df_summary.append(
+                        {"Value": report[metric], "Classifier": classifier, "Metric": metric,
+                         "Fold": str(fold),
+                         "N_Features": "All",
+                         "Experiment": experiment_name + "_" + config_dict["feature_selection"] + "_" + aggregation
+                         }, ignore_index=True)
+                pbar.update(1)
+    df_summary.to_excel(Path(os.environ["ROOT_FOLDER"]).joinpath(
+        experiment_name, experiment_name + "_" + aggregation + ".xlsx"))
 
 
 if __name__ == "__main__":
