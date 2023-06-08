@@ -14,6 +14,7 @@ Welcome to Hive documentation!
    :caption: Contents:
 
    apidocs/Hive_ML
+   apidocs/scripts
 
 
 

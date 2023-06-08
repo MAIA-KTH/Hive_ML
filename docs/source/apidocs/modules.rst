@@ -5,3 +5,4 @@ Hive_ML
    :maxdepth: 2
 
    Hive_ML
+   scripts
