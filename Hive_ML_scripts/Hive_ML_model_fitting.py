@@ -27,7 +27,7 @@ from sklearn.metrics import roc_auc_score
 
 from sklearn.model_selection import StratifiedKFold
 from tqdm import tqdm
-
+from sklearn.decomposition import PCA
 import Hive_ML.configs
 from Hive_ML.data_loader.feature_loader import load_feature_set
 from Hive_ML.training.model_trainer import model_fit_and_predict
@@ -215,13 +215,14 @@ def main():
         else:
             n_iterations += config_dict["n_folds"] * n_features
 
-    with open(Path(os.environ["ROOT_FOLDER"]).joinpath(
-            experiment_name,
-            config_dict["feature_selection"],
-            aggregation, "FS",
-            f"{experiment_name}_FS_summary.json"),
-            'rb') as fp:
-        feature_selection = json.load(fp)
+    if config_dict["feature_selection"] == "SFFS":
+        with open(Path(os.environ["ROOT_FOLDER"]).joinpath(
+                experiment_name,
+                config_dict["feature_selection"],
+                aggregation, "FS",
+                f"{experiment_name}_FS_summary.json"),
+                'rb') as fp:
+            feature_selection = json.load(fp)
 
     pbar = tqdm(total=n_iterations)
 
@@ -259,6 +260,9 @@ def main():
                     if aggregation == "Mean_Norm":
                         x_train = np.nanmean(x_train, axis=1)
                         x_val = np.nanmean(x_val, axis=1)
+                    elif aggregation == "SD_Norm":
+                        x_train = np.nanstd(x_train, axis=1)
+                        x_val = np.nanstd(x_val, axis=1)
 
                     if config_dict["feature_selection"] == "SFFS":
 
@@ -273,6 +277,10 @@ def main():
                         x_train = x_train[:, feature_idx]
 
                         x_val = x_val[:, feature_idx]
+                    elif config_dict["feature_selection"] == "PCA":
+                        pca = PCA(n_components=n_features)
+                        x_train = pca.fit_transform(x_train)
+                        x_val = pca.transform(x_val)
 
                     x_train, x_val, _ = feature_normalization(x_train, x_val)
                     clf = MODELS[classifier](**models[classifier])
@@ -312,8 +320,10 @@ def main():
 
                 if aggregation == "Mean_Norm":
                     x_train = np.nanmean(x_train, axis=1)
+                    x_val = np.nanmean(x_val, axis=1)
                 elif aggregation == "SD_Norm":
                     x_train = np.nanstd(x_train, axis=1)
+                    x_val = np.nanstd(x_val, axis=1)
 
                 x_train, x_val, _ = feature_normalization(x_train, x_val)
                 clf = MODELS[classifier](**models[classifier])
@@ -336,8 +346,13 @@ def main():
                          "Experiment": experiment_name + "_" + config_dict["feature_selection"] + "_" + aggregation
                          }, ignore_index=True)
                 pbar.update(1)
-    df_summary.to_excel(Path(os.environ["ROOT_FOLDER"]).joinpath(
-        experiment_name, experiment_name + "_" + aggregation + ".xlsx"))
+
+    if config_dict["feature_selection"] == "PCA":
+        df_summary.to_excel(Path(os.environ["ROOT_FOLDER"]).joinpath(
+            experiment_name, experiment_name + "_" + aggregation + "_PCA.xlsx"))
+    else:
+        df_summary.to_excel(Path(os.environ["ROOT_FOLDER"]).joinpath(
+            experiment_name, experiment_name + "_" + aggregation + "_SFFS.xlsx"))
 
 
 if __name__ == "__main__":
