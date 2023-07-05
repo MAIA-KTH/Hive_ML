@@ -185,11 +185,11 @@ def main():
 
     features_df.fillna(0, inplace=True)
     if arguments["output_file"].endswith(".xlsx"):
-        features_df.to_excel(Path(arguments["data_folder"]).joinpath(arguments["output_file"]))
+        features_df.to_excel(Path(arguments["output_file"]))
     elif arguments["output_file"].endswith(".csv"):
-        features_df.to_csv(str(Path(arguments["data_folder"]).joinpath(arguments["output_file"])))
+        features_df.to_csv(str(Path(arguments["output_file"])))
     elif arguments["output_file"].endswith(".pkl"):
-        features_df.to_pickle(str(Path(arguments["data_folder"]).joinpath(arguments["output_file"])))
+        features_df.to_pickle(str(Path(arguments["output_file"])))
     else:
         raise ValueError("Output file format not recognized, expected one of: '.xslx', '.csv', '.pkl' ")
 
