@@ -10,3 +10,6 @@ pysftp
 mlxtend
 scikit_learn
 scipy
+plotly
+yellowbrick
+kaleido
