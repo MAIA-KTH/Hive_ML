@@ -1,0 +1,68 @@
+{
+  "image_suffix": [
+    "_ttp_map.nii.gz",
+    "_cbv_map.nii.gz",
+    "_cbf_map.nii.gz",
+    "_mtt_map.nii.gz",
+    "_ncbf_map.nii.gz",
+    "_acbf_map.nii.gz",
+    "_sdcbf_map.nii.gz",
+    "_nmtt_map.nii.gz",
+    "_amtt_map.nii.gz",
+    "_sdmtt_map.nii.gz",
+    "_ttcbf_map.nii.gz",
+    "_ttncbf_map.nii.gz"
+  ],
+  "mask_suffix": "_mask.nii.gz",
+  "label_dict": {
+    "0": "non-pCR",
+    "1": "pCR"
+  },
+  "models": {
+    "rf": {
+      "criterion": "gini",
+      "n_estimators": 100,
+      "max_depth": 10
+    },
+    "adab": {
+      "criterion": "gini",
+      "n_estimators": 100,
+      "max_depth": 10
+    },
+    "knn": {},
+    "lda": {},
+    "qda": {},
+    "logistic_regression": {},
+    "svm": {
+      "kernel": "rbf"
+    },
+    "naive": {}
+  },
+  "perfusion_maps": {
+    "distance_map": "_distance_map.nii.gz",
+    "distance_map_depth": {
+      "suffix": "_distance_map_depth.nii.gz",
+      "kwargs": [
+        2
+      ]
+    },
+    "ttp": "_ttp_map.nii.gz",
+    "cbv": "_cbv_map.nii.gz",
+    "cbf": "_cbf_map.nii.gz",
+    "mtt": "_mtt_map.nii.gz",
+    "ncbf": "_ncbf_map.nii.gz",
+    "acbf": "_acbf_map.nii.gz",
+    "sdcbf": "_sdcbf_map.nii.gz",
+    "nmtt": "_nmtt_map.nii.gz",
+    "amtt": "_amtt_map.nii.gz",
+    "sdmtt": "_sdmtt_map.nii.gz",
+    "ttcbf": "_ttcbf_map.nii.gz",
+    "ttncbf": "_ttncbf_map.nii.gz"
+  },
+  "DatasetName": "DMRI_Breast",
+  "feature_selection": "SFFS",
+  "n_features": 30,
+  "n_folds": 5,
+  "random_seed": 12345,
+  "feature_aggregator": "Flat"
+}

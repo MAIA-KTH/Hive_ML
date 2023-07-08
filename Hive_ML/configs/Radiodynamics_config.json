@@ -47,5 +47,5 @@
   "n_features": 30,
   "n_folds": 5,
   "random_seed": 12345,
-  "feature_aggregator": "SD_Norm"
+  "feature_aggregator": "Flat"
 }
