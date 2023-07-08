@@ -32,6 +32,19 @@ Hive-ML config
         },
         "naive": {}
       },
+      "perfusion_maps": {
+        "distance_map": "_distance_map.nii.gz",
+        "distance_map_depth": {
+          "suffix": "_distance_map_depth.nii.gz",
+          "kwargs": [
+            2
+          ]
+        },
+        "ttp": "_ttp_map.nii.gz",
+        "cbv": "_cbv_map.nii.gz",
+        "cbf": "_cbf_map.nii.gz",
+        "mtt": "_mtt_map.nii.gz"
+     },
       "feature_selection": "SFFS",
       "n_features": 30,
       "n_folds": 5,

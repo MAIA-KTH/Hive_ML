@@ -32,7 +32,11 @@
     },
     "label_dict": {
       "type": "Dict[str,str]",
-      "description": "Dictionary describing the classes. The key-value pair contains the label value as key (starting from ``0``) and the class description as value. Example: \"0\": \"ABD_Lymph_Node\""
+      "description": "Dictionary describing the classes. The key-value pair contains the label value as key (starting from ``0``) and the class description as value. Example: \"0\": \"pCR\""
+    },
+    "perfusion_maps": {
+      "type": "Dict[str,Any]",
+      "description": "Dictionary describing the perfusion maps to extract. Each element includes the perfusion map name and the file suffix used to save the perfusion map."
     },
     "n_folds": {
       "type": "integer",
@@ -48,6 +52,7 @@
     "n_features",
     "n_folds",
     "random_seed",
+    "perfusion_maps",
     "feature_aggregator"
   ]
 }
