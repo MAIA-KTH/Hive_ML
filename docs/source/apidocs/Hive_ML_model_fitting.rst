@@ -1,4 +1,4 @@
-Hive\_ML\_model\_fitting module
+Hive\_ML\_model\_fitting script
 =================================================
 
 .. automodule:: Hive_ML_model_fitting

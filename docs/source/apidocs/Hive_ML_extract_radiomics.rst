@@ -1,4 +1,4 @@
-Hive\_ML\_extract\_radiomics module
+Hive\_ML\_extract\_radiomics script
 =====================================================
 
 .. automodule:: Hive_ML_extract_radiomics

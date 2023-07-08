@@ -1,4 +1,4 @@
-Hive\_ML\_feature\_selection module
+Hive\_ML\_feature\_selection script
 =====================================================
 
 .. automodule:: Hive_ML_feature_selection
