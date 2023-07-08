@@ -179,9 +179,11 @@ def main():
         for subject_feature_sequence in subject_feature_sequence_list:
             feature_sequence_list.append(subject_feature_sequence)
 
-    features_df = pd.DataFrame()
+    features_df = []
     for feature_sequence in feature_sequence_list:
-        features_df = features_df.append(feature_sequence, ignore_index=True)
+        for sequence in feature_sequence:
+            features_df.append(sequence)
+    features_df = pd.DataFrame.from_records(features_df)
 
     features_df.fillna(0, inplace=True)
     if arguments["output_file"].endswith(".xlsx"):

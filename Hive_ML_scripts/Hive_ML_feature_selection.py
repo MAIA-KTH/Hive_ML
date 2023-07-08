@@ -16,6 +16,7 @@ from Hive.utils.log_utils import (
     log_lvl_from_verbosity_args,
 
 )
+from joblib import parallel_backend
 from mlxtend.feature_selection import SequentialFeatureSelector as SFS
 from sklearn import preprocessing
 from sklearn.model_selection import StratifiedKFold
@@ -205,66 +206,69 @@ def main():
     tr_feature_set = train_feature_set
     if len(tr_feature_set.shape) > 2:
         tr_feature_set = np.swapaxes(train_feature_set, 0, 1)
-    for classifier in models:
-        if classifier in ["rf", "adab"]:
-            pbar.update(1)
-            continue
-        selected_features[classifier] = {}
-        kf = StratifiedKFold(n_splits=config_dict["n_folds"], random_state=config_dict["random_seed"], shuffle=True)
-        for fold, (train_index, _) in enumerate(kf.split(tr_feature_set, train_label_set)):
-            pbar.set_description(f"{classifier}, fold {fold} FS")
-            fs_summary = Path(experiment_dir).joinpath(f"FS_summary_{classifier}_fold_{fold}.json")
-            if fs_summary.is_file():
-                with open(fs_summary, "r") as f:
-                    selected_features[classifier][fold] = json.load(f)
 
-            else:
-                x_train = tr_feature_set[train_index, :]
+    with parallel_backend('loky', n_jobs=-1):
+        for classifier in models:
+            if classifier in ["rf", "adab"]:
+                pbar.update(1)
+                continue
+            selected_features[classifier] = {}
+            kf = StratifiedKFold(n_splits=config_dict["n_folds"], random_state=config_dict["random_seed"], shuffle=True)
+            for fold, (train_index, _) in enumerate(kf.split(tr_feature_set, train_label_set)):
+                pbar.set_description(f"{classifier}, fold {fold} FS")
+                fs_summary = Path(experiment_dir).joinpath(f"FS_summary_{classifier}_fold_{fold}.json")
+                if fs_summary.is_file():
+                    with open(fs_summary, "r") as f:
+                        selected_features[classifier][fold] = json.load(f)
 
-                y_train = train_label_set[train_index]
+                else:
+                    x_train = tr_feature_set[train_index, :]
 
-                if len(x_train.shape) > 2:
-                    for t in range(x_train.shape[1]):
-                        min_max_norm = preprocessing.MinMaxScaler(feature_range=(0, 1))
-                        x_train[:, t, :] = min_max_norm.fit_transform(x_train[:, t, :])
+                    y_train = train_label_set[train_index]
 
-                if aggregation == "Mean_Norm":
-                    x_train = np.nanmean(x_train, axis=1)
-                elif aggregation == "SD_Norm":
-                    x_train = np.nanstd(x_train, axis=1)
+                    if len(x_train.shape) > 2:
+                        for t in range(x_train.shape[1]):
+                            min_max_norm = preprocessing.MinMaxScaler(feature_range=(0, 1))
+                            x_train[:, t, :] = min_max_norm.fit_transform(x_train[:, t, :])
 
-                n_features = config_dict["n_features"]
-                if n_features > x_train.shape[1]:
-                    n_features = x_train.shape[1]
+                    if aggregation == "Mean_Norm":
+                        x_train = np.nanmean(x_train, axis=1)
+                    elif aggregation == "SD_Norm":
+                        x_train = np.nanstd(x_train, axis=1)
 
-                x_train, _, _ = feature_normalization(x_train)
+                    n_features = config_dict["n_features"]
+                    if n_features > x_train.shape[1]:
+                        n_features = x_train.shape[1]
 
-                clf = MODELS[classifier](**models[classifier])
-                sffs_model = SFS(clf,
-                                 k_features=n_features,
-                                 forward=True,
-                                 floating=True,
-                                 scoring='roc_auc',
-                                 verbose=0,
-                                 n_jobs=-1,
-                                 cv=5)
-                df_features_x = pd.DataFrame()
-                for x_train_row in x_train:
-                    df_row = {}
-                    for idx, feature_name in enumerate(feature_names):
-                        df_row[feature_name] = x_train_row[idx]
-                    df_features_x = df_features_x.append(df_row, ignore_index=True)
+                    x_train, _, _ = feature_normalization(x_train)
 
-                sffs = sffs_model.fit(df_features_x, y_train)
+                    clf = MODELS[classifier](**models[classifier])
+                    sffs_model = SFS(clf,
+                                     k_features=n_features,
+                                     forward=True,
+                                     floating=True,
+                                     scoring='roc_auc',
+                                     verbose=0,
+                                     n_jobs=-1,
+                                     cv=5)
+                    df_features_x = []
+                    for x_train_row in x_train:
+                        df_row = {}
+                        for idx, feature_name in enumerate(feature_names):
+                            df_row[feature_name] = x_train_row[idx]
+                        df_features_x.append(df_row)
 
-                sffs_features = sffs.subsets_
-                for key in sffs_features:
-                    sffs_features[key]['cv_scores'] = sffs_features[key]['cv_scores'].tolist()
+                    df_features_x = pd.DataFrame.from_records(df_features_x)
+                    sffs = sffs_model.fit(df_features_x, y_train)
 
-                selected_features[classifier][fold] = sffs_features
-                with open(fs_summary, "w") as f:
-                    json.dump(sffs_features, f)
-            pbar.update(1)
+                    sffs_features = sffs.subsets_
+                    for key in sffs_features:
+                        sffs_features[key]['cv_scores'] = sffs_features[key]['cv_scores'].tolist()
+
+                    selected_features[classifier][fold] = sffs_features
+                    with open(fs_summary, "w") as f:
+                        json.dump(sffs_features, f)
+                pbar.update(1)
 
     with open(str(Path(experiment_dir).joinpath(f"{experiment_name}_FS_summary.json")), "w") as f:
         json.dump(selected_features, f)
