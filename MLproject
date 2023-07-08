@@ -1,0 +1,10 @@
+name: dce-mri-radiomics
+
+entry_points:
+   main:
+    parameters:
+      data_folder: string
+      config_file: string
+      exp_name: string
+      radiomic_config_file: string
+    command: "python main.py --data-folder {data_folder} --config-file {config_file} --experiment-name {exp_name} --radiomic-config-file {radiomic_config_file}"
