@@ -2,8 +2,13 @@ Bootstrap: docker
 From: continuumio/anaconda3
 
 %files
-    ./requirements.txt .
-    . /opt/code/Hive_ML
+    ./Hive_ML /opt/code/Hive_ML/Hive_ML
+    ./Hive_ML_scripts /opt/code/Hive_ML
+    ./VERSION /opt/code/Hive_ML
+    ./setup.py /opt/code/Hive_ML
+    ./main.py /opt/code/Hive_ML
+    ./README.md /opt/code/Hive_ML
+    ./requirements.txt /opt/code/Hive_ML
 
 %post
 
