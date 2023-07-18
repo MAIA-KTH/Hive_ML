@@ -172,6 +172,7 @@ def feature_normalization(x_train: numpy.ndarray, x_val: numpy.ndarray = None, x
         Feature matrix of validation set.
     x_test :
         Feature matrix of test set. The default is None.
+
     Returns
     -------
         normalized feature sets based on the statistics of training features.
@@ -195,7 +196,7 @@ def prepare_features(feature_set: numpy.ndarray, label_set: numpy.ndarray, train
     """
     Function to prepare a feature set into a train/test split, according to the provided indexes. If the
     ``feature_set.shape`` is 3D, performs a channel-wise (axis=1) normalization, optionally followed by a reduction (
-    **mean**, **std**) along the same axis.
+    **mean**, **std** )  along the same axis.
 
     Parameters
     ----------
