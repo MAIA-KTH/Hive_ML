@@ -89,7 +89,7 @@ def evaluate_classifiers(ensemble_configuration_df: DataFrame, classifier_kwargs
                          test_label_set: np.ndarray,
                          aggregation: str,
                          feature_selection: str,
-                         visualizers: List[Visualizer] = None,
+                         visualizers: List[Dict] = None,
                          output_file: Union[str, PathLike] = None,
                          plot_title: str = "") -> Dict:
     """

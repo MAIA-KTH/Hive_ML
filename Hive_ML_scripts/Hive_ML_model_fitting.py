@@ -11,13 +11,14 @@ from textwrap import dedent
 
 import numpy as np
 import pandas as pd
+import plotly.express as px
 from Hive.utils.log_utils import (
     get_logger,
     add_verbosity_options_to_argparser,
     log_lvl_from_verbosity_args,
 
 )
-from sklearn import preprocessing
+from joblib import parallel_backend
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -33,7 +34,8 @@ from Hive_ML.data_loader.feature_loader import load_feature_set
 from Hive_ML.training.model_trainer import model_fit_and_predict
 from Hive_ML.training.models import adab_tree, random_forest, knn, decicion_tree, lda, qda, naive, svm_kernel, \
     logistic_regression, ridge, mlp
-from Hive_ML.utilities.feature_utils import data_shuffling, feature_normalization
+from Hive_ML.utilities.feature_utils import data_shuffling, feature_normalization, prepare_features
+from Hive_ML.evaluation.model_evaluation import select_best_classifiers, evaluate_classifiers
 
 TIMESTAMP = "{:%Y-%m-%d_%H-%M-%S}".format(datetime.datetime.now())
 
@@ -155,17 +157,16 @@ def main():
     elif aggregation == "Delta":
         features = mean_delta_features
 
+    label_set = np.array(subject_labels)
+
     if aggregation.endswith("Norm"):
         features = feature_set
 
         feature_set_3D = np.array(features).squeeze(-2)
 
-        label_set = np.array(subject_labels)
         train_feature_set, train_label_set, test_feature_set, test_label_set = data_shuffling(
             np.swapaxes(feature_set_3D, 0, 1), label_set, config_dict["random_seed"])
 
-        train_feature_set = np.swapaxes(train_feature_set, 0, 1)
-        test_feature_set = np.swapaxes(test_feature_set, 0, 1)
     else:
 
         n_features = features.shape[1]
@@ -188,7 +189,7 @@ def main():
 
         feature_set = np.vstack(filtered_feature_set).T
         feature_names = filtered_feature_names
-        label_set = np.array(subject_labels)
+
         print("# Features: {}".format(feature_set.shape[1]))
         print("# Labels: {}".format(label_set.shape))
 
@@ -226,61 +227,75 @@ def main():
 
     pbar = tqdm(total=n_iterations)
 
-    df_summary = pd.DataFrame()
+    df_summary = []
 
-    tr_feature_set = train_feature_set
-    if len(tr_feature_set.shape) > 2:
-        tr_feature_set = np.swapaxes(train_feature_set, 0, 1)
+    with parallel_backend('loky', n_jobs=-1):
+        for classifier in models:
+            pbar.set_description(f"{classifier}, Model Fitting")
+            if classifier in ["rf", "adab"]:
+                n_features = "All"
+            else:
+                n_features = config_dict["n_features"]
+                if n_features > train_feature_set.shape[-1]:
+                    n_features = train_feature_set.shape[-1]
+            if n_features != "All":
+                for n_feature in range(1, n_features + 1):
+                    kf = StratifiedKFold(n_splits=config_dict["n_folds"], random_state=config_dict["random_seed"],
+                                         shuffle=True)
+                    for fold, (train_index, val_index) in enumerate(kf.split(train_feature_set, train_label_set)):
 
-    for classifier in models:
-        pbar.set_description(f"{classifier}, Model Fitting")
-        if classifier in ["rf", "adab"]:
-            n_features = "All"
-        else:
-            n_features = config_dict["n_features"]
-            if n_features > train_feature_set.shape[-1]:
-                n_features = train_feature_set.shape[-1]
-        if n_features != "All":
-            for n_feature in range(1, n_features + 1):
+                        x_train, y_train, x_val, y_val = prepare_features(train_feature_set, train_label_set,
+                                                                          train_index, aggregation, val_index)
+
+                        if config_dict["feature_selection"] == "SFFS":
+
+                            selected_features = feature_selection[classifier][str(fold)][str(n_feature)][
+                                "feature_names"]
+                            train_feature_name_list = list(feature_names)
+
+                            feature_idx = []
+
+                            for selected_feature in selected_features:
+                                feature_idx.append(train_feature_name_list.index(selected_feature))
+
+                            x_train = x_train[:, feature_idx]
+
+                            x_val = x_val[:, feature_idx]
+
+                        elif config_dict["feature_selection"] == "PCA":
+                            pca = PCA(n_components=n_features)
+                            x_train = pca.fit_transform(x_train)
+                            x_val = pca.transform(x_val)
+
+                        x_train, x_val, _ = feature_normalization(x_train, x_val)
+                        clf = MODELS[classifier](**models[classifier])
+
+                        y_val_pred = model_fit_and_predict(clf, x_train, y_train, x_val)
+
+                        roc_auc_val = roc_auc_score(y_val, y_val_pred[:, 1])
+
+                        report = classification_report(y_val,
+                                                       np.where(y_val_pred[:, 1] > 0.5, 1, 0), output_dict=True)
+                        report["roc_auc"] = roc_auc_val
+
+                        for metric in metrics:
+                            if metric not in report:
+                                report[metric] = COMPOSED_METRICS[metric](report)
+                            df_summary.append(
+                                {"Value": report[metric], "Classifier": classifier, "Metric": metric,
+                                 "Fold": str(fold),
+                                 "N_Features": n_feature,
+                                 "Experiment": experiment_name + "_" + config_dict[
+                                     "feature_selection"] + "_" + aggregation
+                                 })
+                        pbar.update(1)
+            else:
                 kf = StratifiedKFold(n_splits=config_dict["n_folds"], random_state=config_dict["random_seed"],
                                      shuffle=True)
-                for fold, (train_index, val_index) in enumerate(kf.split(tr_feature_set, train_label_set)):
+                for fold, (train_index, val_index) in enumerate(kf.split(train_feature_set, train_label_set)):
 
-                    x_train = tr_feature_set[train_index, :]
-                    x_val = tr_feature_set[val_index, :]
-                    y_train = train_label_set[train_index]
-                    y_val = train_label_set[val_index]
-
-                    if len(x_train.shape) > 2:
-                        for t in range(x_train.shape[1]):
-                            min_max_norm = preprocessing.MinMaxScaler(feature_range=(0, 1))
-                            x_train[:, t, :] = min_max_norm.fit_transform(x_train[:, t, :])
-                            x_val[:, t, :] = min_max_norm.transform(x_val[:, t, :])
-
-                    if aggregation == "Mean_Norm":
-                        x_train = np.nanmean(x_train, axis=1)
-                        x_val = np.nanmean(x_val, axis=1)
-                    elif aggregation == "SD_Norm":
-                        x_train = np.nanstd(x_train, axis=1)
-                        x_val = np.nanstd(x_val, axis=1)
-
-                    if config_dict["feature_selection"] == "SFFS":
-
-                        selected_features = feature_selection[classifier][str(fold)][str(n_feature)]["feature_names"]
-                        train_feature_name_list = list(feature_names)
-
-                        feature_idx = []
-
-                        for selected_feature in selected_features:
-                            feature_idx.append(train_feature_name_list.index(selected_feature))
-
-                        x_train = x_train[:, feature_idx]
-
-                        x_val = x_val[:, feature_idx]
-                    elif config_dict["feature_selection"] == "PCA":
-                        pca = PCA(n_components=n_features)
-                        x_train = pca.fit_transform(x_train)
-                        x_val = pca.transform(x_val)
+                    x_train, y_train, x_val, y_val = prepare_features(train_feature_set, train_label_set, train_index,
+                                                                      aggregation, val_index)
 
                     x_train, x_val, _ = feature_normalization(x_train, x_val)
                     clf = MODELS[classifier](**models[classifier])
@@ -296,63 +311,124 @@ def main():
                     for metric in metrics:
                         if metric not in report:
                             report[metric] = COMPOSED_METRICS[metric](report)
-                        df_summary = df_summary.append(
+                        df_summary.append(
                             {"Value": report[metric], "Classifier": classifier, "Metric": metric,
                              "Fold": str(fold),
-                             "N_Features": n_feature,
+                             "N_Features": "All",
                              "Experiment": experiment_name + "_" + config_dict["feature_selection"] + "_" + aggregation
-                             }, ignore_index=True)
+                             })
                     pbar.update(1)
-        else:
-            kf = StratifiedKFold(n_splits=config_dict["n_folds"], random_state=config_dict["random_seed"], shuffle=True)
-            for fold, (train_index, val_index) in enumerate(kf.split(tr_feature_set, train_label_set)):
 
-                x_train = tr_feature_set[train_index, :]
-                x_val = tr_feature_set[val_index, :]
-                y_train = train_label_set[train_index]
-                y_val = train_label_set[val_index]
+    df_summary = pd.DataFrame.from_records(df_summary)
+    feature_selection_method = config_dict["feature_selection"]
+    df_summary.to_excel(Path(os.environ["ROOT_FOLDER"]).joinpath(
+        experiment_name, experiment_name + "_" + feature_selection_method + f"_{aggregation}.xlsx"))
 
-                if len(x_train.shape) > 2:
-                    for t in range(x_train.shape[1]):
-                        min_max_norm = preprocessing.MinMaxScaler(feature_range=(0, 1))
-                        x_train[:, t, :] = min_max_norm.fit_transform(x_train[:, t, :])
-                        x_val[:, t, :] = min_max_norm.transform(x_val[:, t, :])
+    df_summary_all = df_summary[df_summary["N_Features"] == "All"]
+    df_summary_all = df_summary_all.drop(["Fold"], axis=1)
+    df_summary = df_summary[df_summary["N_Features"] != "All"]
 
-                if aggregation == "Mean_Norm":
-                    x_train = np.nanmean(x_train, axis=1)
-                    x_val = np.nanmean(x_val, axis=1)
-                elif aggregation == "SD_Norm":
-                    x_train = np.nanstd(x_train, axis=1)
-                    x_val = np.nanstd(x_val, axis=1)
+    df_summary = df_summary[df_summary["N_Features"] <= 15]
+    df_summary = df_summary.drop(["Fold"], axis=1)
+    df_summary = pd.concat([df_summary, df_summary_all])
 
-                x_train, x_val, _ = feature_normalization(x_train, x_val)
-                clf = MODELS[classifier](**models[classifier])
+    metric = "roc_auc"
+    reduction = "median"
+    k = 1
 
-                y_val_pred = model_fit_and_predict(clf, x_train, y_train, x_val)
+    visualizers = {
 
-                roc_auc_val = roc_auc_score(y_val, y_val_pred[:, 1])
+        "Report": {"support": True,
+                   "classes": [config_dict["label_dict"][key] for key in config_dict["label_dict"]]},
+        "ROCAUC": {"micro": False, "macro": False, "per_class": False,
+                   "classes": [config_dict["label_dict"][key] for key in config_dict["label_dict"]]},
+        "PR": {},
+        "CPE": {"classes": [config_dict["label_dict"][key] for key in config_dict["label_dict"]]},
+        "DT": {}
+    }
 
-                report = classification_report(y_val,
-                                               np.where(y_val_pred[:, 1] > 0.5, 1, 0), output_dict=True)
-                report["roc_auc"] = roc_auc_val
+    features_classifiers, scores = select_best_classifiers(df_summary, "roc_auc", reduction, k)
 
-                for metric in metrics:
-                    if metric not in report:
-                        report[metric] = COMPOSED_METRICS[metric](report)
-                    df_summary = df_summary.append(
-                        {"Value": report[metric], "Classifier": classifier, "Metric": metric,
-                         "Fold": str(fold),
-                         "N_Features": "All",
-                         "Experiment": experiment_name + "_" + config_dict["feature_selection"] + "_" + aggregation
-                         }, ignore_index=True)
-                pbar.update(1)
+    val_scores = pd.DataFrame()
 
-    if config_dict["feature_selection"] == "PCA":
-        df_summary.to_excel(Path(os.environ["ROOT_FOLDER"]).joinpath(
-            experiment_name, experiment_name + "_" + aggregation + "_PCA.xlsx"))
-    else:
-        df_summary.to_excel(Path(os.environ["ROOT_FOLDER"]).joinpath(
-            experiment_name, experiment_name + "_" + aggregation + "_SFFS.xlsx"))
+    val_scores = val_scores.append(
+        {"Metric": metric,
+         "Experiment": experiment_name + f", {features_classifiers[0][1]}-{features_classifiers[0][0]}",
+         "Score": scores[0][0], "Section": "Validation Set [5-CV Median]"},
+        ignore_index=True)
+
+    classifiers = [classifier for n_features, classifier in features_classifiers]
+    n_feature_list = [n_features for n_features, classifier in features_classifiers]
+    classifier_kwargs_list = [models[classifier] for classifier in classifiers]
+
+    ensemble_weights = [score[0] for score in scores]
+
+    ensemble_configuration_df = []
+
+    for classifier, n_features, weight in zip(classifiers, n_feature_list, ensemble_weights):
+        ensemble_configuration_df.append({"Classifier": classifier,
+                                          "N_Features": n_features,
+                                          "weight": weight})
+
+    ensemble_configuration = pd.DataFrame.from_records(ensemble_configuration_df)
+
+    output_file = str(Path(os.environ["ROOT_FOLDER"]).joinpath(
+        experiment_name,
+        f"{experiment_name} {feature_selection_method} {aggregation} {reduction}_{k}.png"))
+
+    plot_title = f"{experiment_name} SFFS {aggregation}"
+
+    report = evaluate_classifiers(ensemble_configuration, classifier_kwargs_list,
+                                  train_feature_set, train_label_set, test_feature_set, test_label_set,
+                                  aggregation, feature_selection, visualizers, output_file, plot_title)
+
+    roc_auc_val = report[metric]
+
+    val_scores = val_scores.append(
+        {"Metric": metric,
+         "Experiment": experiment_name + f", {features_classifiers[0][1]}-{features_classifiers[0][0]}",
+         "Score": roc_auc_val, "Section": "Test Set"}, ignore_index=True)
+
+    metric = "roc_auc"
+    reduction = "median"
+    k = 5
+
+    features_classifiers, scores = select_best_classifiers(df_summary, "roc_auc", reduction, k)
+
+    classifiers = [classifier for n_features, classifier in features_classifiers]
+    n_feature_list = [n_features for n_features, classifier in features_classifiers]
+    classifier_kwargs_list = [models[classifier] for classifier in classifiers]
+
+    ensemble_weights = [score[0] for score in scores]
+
+    ensemble_configuration_df = []
+
+    for classifier, n_features, weight in zip(classifiers, n_feature_list, ensemble_weights):
+        ensemble_configuration_df.append({"Classifier": classifier,
+                                          "N_Features": n_features,
+                                          "weight": weight})
+
+    ensemble_configuration = pd.DataFrame.from_records(ensemble_configuration_df)
+
+    output_file = str(Path(os.environ["ROOT_FOLDER"]).joinpath(
+        experiment_name,
+        f"{experiment_name} {feature_selection_method} {aggregation} {reduction}_{k}.png"))
+
+    report = evaluate_classifiers(ensemble_configuration, classifier_kwargs_list,
+                                  train_feature_set, train_label_set, test_feature_set, test_label_set,
+                                  aggregation, feature_selection, visualizers, output_file, plot_title)
+
+    roc_auc_val = report[metric]
+
+    val_scores = val_scores.append(
+        {"Metric": metric, "Experiment": experiment_name + f", Ensembler [Top-5]", "Score": roc_auc_val,
+         "Section": "Test Set"}, ignore_index=True)
+
+    val_scores.to_excel(Path(os.environ["ROOT_FOLDER"]).joinpath(experiment_name, f"{plot_title}.xlsx"))
+
+    fig = px.bar(val_scores, x='Section', y='Score', color="Experiment", text_auto=True, title=plot_title,
+                 barmode='group')
+    fig.write_image(Path(os.environ["ROOT_FOLDER"]).joinpath(experiment_name, f"{plot_title}.svg"))
 
 
 if __name__ == "__main__":
