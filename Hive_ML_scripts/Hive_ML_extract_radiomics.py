@@ -94,6 +94,12 @@ def main():
         level=log_lvl_from_verbosity_args(arguments),
     )
 
+    if Path(arguments["output_file"]).is_file():
+        output_file = arguments["output_file"]
+        print(f"{output_file} already present. Skipping Feature Extraction")
+
+        return
+
     radiomics.logger.setLevel(logging.INFO)
     try:
         with open(arguments["config_file"]) as json_file:
