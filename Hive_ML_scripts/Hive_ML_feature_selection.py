@@ -18,7 +18,6 @@ from Hive.utils.log_utils import (
 )
 from joblib import parallel_backend
 from mlxtend.feature_selection import SequentialFeatureSelector as SFS
-from sklearn import preprocessing
 from sklearn.model_selection import StratifiedKFold
 from tqdm import tqdm
 
@@ -26,7 +25,7 @@ import Hive_ML.configs
 from Hive_ML.data_loader.feature_loader import load_feature_set
 from Hive_ML.training.models import adab_tree, random_forest, knn, decicion_tree, lda, qda, naive, svm_kernel, \
     logistic_regression, ridge, mlp
-from Hive_ML.utilities.feature_utils import data_shuffling, feature_normalization
+from Hive_ML.utilities.feature_utils import data_shuffling, feature_normalization, prepare_features
 
 TIMESTAMP = "{:%Y-%m-%d_%H-%M-%S}".format(datetime.datetime.now())
 
@@ -144,17 +143,16 @@ def main():
     elif aggregation == "Delta":
         features = mean_delta_features
 
+    label_set = np.array(subject_labels)
+
     if aggregation.endswith("Norm"):
         features = feature_set
 
         feature_set_3D = np.array(features).squeeze(-2)
 
-        label_set = np.array(subject_labels)
         train_feature_set, train_label_set, test_feature_set, test_label_set = data_shuffling(
             np.swapaxes(feature_set_3D, 0, 1), label_set, config_dict["random_seed"])
 
-        train_feature_set = np.swapaxes(train_feature_set, 0, 1)
-        test_feature_set = np.swapaxes(test_feature_set, 0, 1)
     else:
 
         n_features = features.shape[1]
@@ -178,7 +176,7 @@ def main():
 
         feature_set = np.vstack(filtered_feature_set).T
         feature_names = filtered_feature_names
-        label_set = np.array(subject_labels)
+
         print("# Features: {}".format(feature_set.shape[1]))
         print("# Labels: {}".format(label_set.shape))
 
@@ -203,10 +201,6 @@ def main():
 
     pbar = tqdm(total=n_iterations)
 
-    tr_feature_set = train_feature_set
-    if len(tr_feature_set.shape) > 2:
-        tr_feature_set = np.swapaxes(train_feature_set, 0, 1)
-
     with parallel_backend('loky', n_jobs=-1):
         for classifier in models:
             if classifier in ["rf", "adab"]:
@@ -214,7 +208,7 @@ def main():
                 continue
             selected_features[classifier] = {}
             kf = StratifiedKFold(n_splits=config_dict["n_folds"], random_state=config_dict["random_seed"], shuffle=True)
-            for fold, (train_index, _) in enumerate(kf.split(tr_feature_set, train_label_set)):
+            for fold, (train_index, _) in enumerate(kf.split(train_feature_set, train_label_set)):
                 pbar.set_description(f"{classifier}, fold {fold} FS")
                 fs_summary = Path(experiment_dir).joinpath(f"FS_summary_{classifier}_fold_{fold}.json")
                 if fs_summary.is_file():
@@ -222,19 +216,8 @@ def main():
                         selected_features[classifier][fold] = json.load(f)
 
                 else:
-                    x_train = tr_feature_set[train_index, :]
-
-                    y_train = train_label_set[train_index]
-
-                    if len(x_train.shape) > 2:
-                        for t in range(x_train.shape[1]):
-                            min_max_norm = preprocessing.MinMaxScaler(feature_range=(0, 1))
-                            x_train[:, t, :] = min_max_norm.fit_transform(x_train[:, t, :])
-
-                    if aggregation == "Mean_Norm":
-                        x_train = np.nanmean(x_train, axis=1)
-                    elif aggregation == "SD_Norm":
-                        x_train = np.nanstd(x_train, axis=1)
+                    x_train, y_train, _, _ = prepare_features(train_feature_set, train_label_set, train_index,
+                                                              aggregation)
 
                     n_features = config_dict["n_features"]
                     if n_features > x_train.shape[1]:
