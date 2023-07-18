@@ -1,12 +1,9 @@
 .. k8s_DP documentation master file, created by
-sphinx-quickstart on Tue Aug 10 15:49:34 2021.
-You can adapt this file completely to your liking, but it should at least
-contain the root `toctree` directive.
 
 Welcome to Hive documentation!
 ==================================
 
-.. include:: ../../README.md
+.. include:: README.md
    :parser: myst_parser.sphinx_
 
 .. toctree::

@@ -70,6 +70,8 @@ extensions = [
     "sphinxcontrib.contentui",
     "sphinx.ext.autosectionlabel",
     "sphinx-jsonschema",
+    "nbsphinx",
+    "IPython.sphinxext.ipython_console_highlighting",
     "myst_parser",
 ]
 

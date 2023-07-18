@@ -5,6 +5,7 @@ sphinxcontrib-contentui
 sphinx-jsonschema
 myst-parser
 pydata-sphinx-theme
+nbsphinx
 numpy
 SimpleITK
 six
@@ -17,3 +18,6 @@ pysftp
 mlxtend
 scikit_learn
 scipy
+plotly
+yellowbrick
+kaleido

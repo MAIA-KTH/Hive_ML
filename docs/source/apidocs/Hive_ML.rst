@@ -12,6 +12,7 @@ Subpackages
    Hive_ML.feature_generation
    Hive_ML.training
    Hive_ML.utilities
+   Hive_ML.evaluation
 
 Module contents
 ---------------
