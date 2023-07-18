@@ -154,7 +154,7 @@ def data_shuffling(feature_set: numpy.ndarray, label_set: numpy.ndarray, seed_va
         Shuffled Feature set and Label Set
     """
     X_train, X_test, y_train, y_test = train_test_split(
-        feature_set, label_set, test_size=15, random_state=seed_val)
+        feature_set, label_set, test_size=0.2, random_state=seed_val, stratify=label_set)
 
     return X_train, y_train, X_test, y_test
 
@@ -177,7 +177,6 @@ def feature_normalization(x_train: numpy.ndarray, x_val: numpy.ndarray = None, x
         normalized feature sets based on the statistics of training features.
     """
     min_max_norm = preprocessing.MinMaxScaler(feature_range=(0, 1))
-    min_max_norm.fit(x_train)
     x_train = min_max_norm.fit_transform(x_train)
     if x_val is not None:
         x_val = min_max_norm.transform(x_val)
@@ -186,3 +185,73 @@ def feature_normalization(x_train: numpy.ndarray, x_val: numpy.ndarray = None, x
         x_test = min_max_norm.transform(x_test)
 
     return x_train, x_val, x_test
+
+
+def prepare_features(feature_set: numpy.ndarray, label_set: numpy.ndarray, train_index: List[int], aggregation: str,
+                     val_index: List[int] = None,
+                     val_feature_set: numpy.ndarray = None,
+                     val_label_set: numpy.ndarray = None) -> Tuple[
+    numpy.ndarray, numpy.ndarray, numpy.ndarray, numpy.ndarray]:
+    """
+    Function to prepare a feature set into a train/test split, according to the provided indexes. If the
+    ``feature_set.shape`` is 3D, performs a channel-wise (axis=1) normalization, optionally followed by a reduction (
+    **mean**, **std**) along the same axis.
+
+    Parameters
+    ----------
+    feature_set :
+        Original feature set to split.
+    label_set   :
+        Original label set to split.
+    train_index :
+        Train indexes to extract train split from the feature set. Ignored if ``val_label_set`` and ``val_feature_set`` are provided.
+    aggregation :
+        Aggregation type performed on the feature set. If ``Mean_Norm`` or ``SD_Norm``, perform reduction along axis 1.
+    val_index   :
+        Validation indexes to extract validation split from the feature set. Ignored if ``val_label_set`` and ``val_feature_set`` are provided.
+    val_feature_set :
+        Optional Validation Feature set, to directly provide the validation split data.
+    val_label_set   :
+        Optional Validation Label set, to directly provide the validation split data.
+
+    Returns
+    -------
+        Train/Validation Feature and Label Data.
+
+    """
+    x_val = None
+    y_val = None
+
+    if val_feature_set is not None:
+        x_train = feature_set
+        x_val = val_feature_set
+    else:
+        x_train = feature_set[train_index, :]
+        if val_index is not None:
+            x_val = feature_set[val_index, :]
+
+    if val_label_set is not None:
+        y_train = label_set
+        y_val = val_label_set
+    else:
+        y_train = label_set[train_index]
+        if val_index is not None:
+            y_val = label_set[val_index]
+
+    if len(x_train.shape) > 2:
+        for t in range(x_train.shape[1]):
+            min_max_norm = preprocessing.MinMaxScaler(feature_range=(0, 1))
+            x_train[:, t, :] = min_max_norm.fit_transform(x_train[:, t, :])
+            if x_val is not None:
+                x_val[:, t, :] = min_max_norm.transform(x_val[:, t, :])
+
+    if aggregation == "Mean_Norm":
+        x_train = np.nanmean(x_train, axis=1)
+        if x_val is not None:
+            x_val = np.nanmean(x_val, axis=1)
+    elif aggregation == "SD_Norm":
+        x_train = np.nanstd(x_train, axis=1)
+        if x_val is not None:
+            x_val = np.nanstd(x_val, axis=1)
+
+    return x_train, y_train, x_val, y_val
