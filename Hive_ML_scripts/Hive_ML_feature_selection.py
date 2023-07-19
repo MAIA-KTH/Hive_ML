@@ -225,7 +225,7 @@ def main():
 
                     x_train, _, _ = feature_normalization(x_train)
 
-                    clf = MODELS[classifier](**models[classifier])
+                    clf = MODELS[classifier](**models[classifier], random_state=config_dict["random_seed"])
                     sffs_model = SFS(clf,
                                      k_features=n_features,
                                      forward=True,

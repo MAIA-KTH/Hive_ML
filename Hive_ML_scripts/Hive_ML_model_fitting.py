@@ -268,7 +268,7 @@ def main():
                             x_val = pca.transform(x_val)
 
                         x_train, x_val, _ = feature_normalization(x_train, x_val)
-                        clf = MODELS[classifier](**models[classifier])
+                        clf = MODELS[classifier](**models[classifier], random_state=config_dict["random_seed"])
 
                         y_val_pred = model_fit_and_predict(clf, x_train, y_train, x_val)
 
@@ -298,7 +298,7 @@ def main():
                                                                       aggregation, val_index)
 
                     x_train, x_val, _ = feature_normalization(x_train, x_val)
-                    clf = MODELS[classifier](**models[classifier])
+                    clf = MODELS[classifier](**models[classifier], random_state=config_dict["random_seed"])
 
                     y_val_pred = model_fit_and_predict(clf, x_train, y_train, x_val)
 
@@ -332,9 +332,7 @@ def main():
     df_summary = df_summary.drop(["Fold"], axis=1)
     df_summary = pd.concat([df_summary, df_summary_all])
 
-    metric = "roc_auc"
-    reduction = "median"
-    k = 1
+
 
     visualizers = {
 
@@ -347,83 +345,55 @@ def main():
         "DT": {}
     }
 
-    features_classifiers, scores = select_best_classifiers(df_summary, "roc_auc", reduction, k)
-
-    val_scores = pd.DataFrame()
-
-    val_scores = val_scores.append(
-        {"Metric": metric,
-         "Experiment": experiment_name + f", {features_classifiers[0][1]}-{features_classifiers[0][0]}",
-         "Score": scores[0][0], "Section": "Validation Set [5-CV Median]"},
-        ignore_index=True)
-
-    classifiers = [classifier for n_features, classifier in features_classifiers]
-    n_feature_list = [n_features for n_features, classifier in features_classifiers]
-    classifier_kwargs_list = [models[classifier] for classifier in classifiers]
-
-    ensemble_weights = [score[0] for score in scores]
-
-    ensemble_configuration_df = []
-
-    for classifier, n_features, weight in zip(classifiers, n_feature_list, ensemble_weights):
-        ensemble_configuration_df.append({"Classifier": classifier,
-                                          "N_Features": n_features,
-                                          "weight": weight})
-
-    ensemble_configuration = pd.DataFrame.from_records(ensemble_configuration_df)
-
-    output_file = str(Path(os.environ["ROOT_FOLDER"]).joinpath(
-        experiment_name,
-        f"{experiment_name} {feature_selection_method} {aggregation} {reduction}_{k}.png"))
-
+    metric = config_dict["metric_best_model"]
+    reduction = config_dict["reduction_best_model"]
     plot_title = f"{experiment_name} SFFS {aggregation}"
+    val_scores = []
 
-    report = evaluate_classifiers(ensemble_configuration, classifier_kwargs_list,
-                                  train_feature_set, train_label_set, test_feature_set, test_label_set,
-                                  aggregation, feature_selection, visualizers, output_file, plot_title)
+    features_classifiers, scores = select_best_classifiers(df_summary, metric, reduction, 1)
 
-    roc_auc_val = report[metric]
-
-    val_scores = val_scores.append(
+    val_scores.append(
         {"Metric": metric,
-         "Experiment": experiment_name + f", {features_classifiers[0][1]}-{features_classifiers[0][0]}",
-         "Score": roc_auc_val, "Section": "Test Set"}, ignore_index=True)
+         "Experiment": experiment_name,
+         "Score": scores[0], "Section": f"Validation Set [5-CV {reduction.capitalize()}]"},
+    )
 
-    metric = "roc_auc"
-    reduction = "median"
-    k = 5
+    for k in config_dict["k_ensemble"]:
+        features_classifiers, scores = select_best_classifiers(df_summary, metric, reduction, k)
 
-    features_classifiers, scores = select_best_classifiers(df_summary, "roc_auc", reduction, k)
+        classifiers = [classifier for n_features, classifier in features_classifiers]
+        n_feature_list = [n_features for n_features, classifier in features_classifiers]
+        classifier_kwargs_list = [models[classifier] for classifier in classifiers]
 
-    classifiers = [classifier for n_features, classifier in features_classifiers]
-    n_feature_list = [n_features for n_features, classifier in features_classifiers]
-    classifier_kwargs_list = [models[classifier] for classifier in classifiers]
+        ensemble_weights = scores
 
-    ensemble_weights = [score[0] for score in scores]
+        ensemble_configuration_df = []
 
-    ensemble_configuration_df = []
+        for classifier, n_features, weight in zip(classifiers, n_feature_list, ensemble_weights):
+            ensemble_configuration_df.append({"Classifier": classifier,
+                                              "N_Features": n_features,
+                                              "weight": weight})
 
-    for classifier, n_features, weight in zip(classifiers, n_feature_list, ensemble_weights):
-        ensemble_configuration_df.append({"Classifier": classifier,
-                                          "N_Features": n_features,
-                                          "weight": weight})
+        ensemble_configuration = pd.DataFrame.from_records(ensemble_configuration_df)
 
-    ensemble_configuration = pd.DataFrame.from_records(ensemble_configuration_df)
+        print(ensemble_configuration)
+        output_file = str(Path(os.environ["ROOT_FOLDER"]).joinpath(
+            experiment_name,
+            f"{experiment_name} {feature_selection_method} {aggregation} {reduction}_{k}.png"))
 
-    output_file = str(Path(os.environ["ROOT_FOLDER"]).joinpath(
-        experiment_name,
-        f"{experiment_name} {feature_selection_method} {aggregation} {reduction}_{k}.png"))
+        report = evaluate_classifiers(ensemble_configuration, classifier_kwargs_list,
+                                      train_feature_set, train_label_set, test_feature_set, test_label_set,
+                                      aggregation, feature_selection, visualizers, output_file, plot_title,
+                                      config_dict["random_seed"])
 
-    report = evaluate_classifiers(ensemble_configuration, classifier_kwargs_list,
-                                  train_feature_set, train_label_set, test_feature_set, test_label_set,
-                                  aggregation, feature_selection, visualizers, output_file, plot_title)
+        roc_auc_val = report[metric]
 
-    roc_auc_val = report[metric]
+        val_scores.append(
+            {"Metric": metric,
+             "Experiment": experiment_name,
+             "Score": roc_auc_val, "Section": f"Test Set [k={k}]"})
 
-    val_scores = val_scores.append(
-        {"Metric": metric, "Experiment": experiment_name + f", Ensembler [Top-5]", "Score": roc_auc_val,
-         "Section": "Test Set"}, ignore_index=True)
-
+    val_scores = pd.DataFrame.from_records(val_scores)
     val_scores.to_excel(Path(os.environ["ROOT_FOLDER"]).joinpath(experiment_name, f"{plot_title}.xlsx"))
 
     fig = px.bar(val_scores, x='Section', y='Score', color="Experiment", text_auto=True, title=plot_title,
