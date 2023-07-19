@@ -161,8 +161,8 @@ cython_debug/
 .idea/
 .git/
 mlruns/
-MLproject*
 kubernetes_config.json
 kubernetes_job.yaml
 train.sh
+MLproject_docker
 
