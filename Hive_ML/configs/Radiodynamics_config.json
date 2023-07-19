@@ -46,6 +46,12 @@
   "feature_selection": "SFFS",
   "n_features": 30,
   "n_folds": 5,
-  "random_seed": 12345,
-  "feature_aggregator": "Flat"
+  "random_seed": 1234567,
+  "feature_aggregator": "Flat",
+  "k_ensemble": [
+    1,
+    5
+  ],
+  "metric_best_model": "roc_auc",
+  "reduction_best_model": "mean"
 }

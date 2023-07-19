@@ -49,5 +49,8 @@ Hive-ML config
       "n_features": 30,
       "n_folds": 5,
       "random_seed": 12345,
-      "feature_aggregator": "SD"
+      "feature_aggregator": "SD",
+      "k_ensemble": [1,5],
+      "metric_best_model": "roc_auc",
+      "reduction_best_model": "mean"
     }

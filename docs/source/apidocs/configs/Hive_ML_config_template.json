@@ -3,7 +3,7 @@
   "description": "A JSON template used to set the configuration parameters for experiments based on Hive-ML framework.",
   "properties": {
     "image_suffix": {
-      "type": "string or List[string]",
+      "type": "array",
       "description": "File suffix (or list of File suffixes) of the files containing the image volume. Example: \"_image.nii.gz\""
     },
     "mask_suffix": {
@@ -11,19 +11,19 @@
       "description": "File suffix (including file extension) of the files containing the segmentation mask of the ROI. Example: \"_mask.nii.gz\""
     },
     "models": {
-      "type": "Dict[str,Dict[str,Any]]",
+      "type": "object",
       "description": "Dictionary for all the classifiers to evaluate. Each element includes the classifier class name and an additional dictionary with the kwargs to pass to the classifier object."
     },
     "feature_selection": {
-      "type": "str",
+      "type": "string",
       "description": "Type of Feature Selection to perform. Supported values are ``SFFS`` and ``PCA`` ."
     },
     "n_features": {
-      "type": "int",
+      "type": "integer",
       "description": "Number of features to preserve when performing Feature Selection.  Example: ``30``."
     },
     "feature_aggregator": {
-      "type": "str",
+      "type": "string",
       "description": "Aggregation strategy used when extracting features in the 4D. Supported values are: ``Flat`` (no aggregation, all features are preserved), ``Mean`` (Average over the 4-th dimension), ``SD`` (Standard Deviation over the 4-th dimension), ``Mean_Norm`` (Independent channel-normalization, followed by average over the 4-th dimension), ``SD_Norm`` (Independent channel-normalization, followed by SD over the 4-th dimension)"
     },
     "random_seed": {
@@ -31,16 +31,38 @@
       "description": "Random seed number used when randomizing events and actions. Example: 12345"
     },
     "label_dict": {
-      "type": "Dict[str,str]",
+      "type": "object",
+      "required": [
+        "0",
+        "1"
+      ],
+      "properties": {
+        "0": {
+          "type": "string",
+          "description": "Class 0 Identifier."
+        },
+        "1": {
+          "type": "string",
+          "description": "Class 1 Identifier."
+        }
+      },
       "description": "Dictionary describing the classes. The key-value pair contains the label value as key (starting from ``0``) and the class description as value. Example: \"0\": \"pCR\""
     },
     "perfusion_maps": {
-      "type": "Dict[str,Any]",
+      "type": "object",
       "description": "Dictionary describing the perfusion maps to extract. Each element includes the perfusion map name and the file suffix used to save the perfusion map."
     },
     "n_folds": {
       "type": "integer",
       "description": "Number of folds to run cross-validation. Example: 5."
+    },
+    "metric_best_model": {
+      "type": "string",
+      "description": "Classification Metric to consider when determining the best models from CV results."
+    },
+    "reduction_best_model": {
+      "type": "string",
+      "description": "Reduction to perform on CV scores to determine the best models."
     }
   },
   "required": [
@@ -53,6 +75,9 @@
     "n_folds",
     "random_seed",
     "perfusion_maps",
-    "feature_aggregator"
+    "feature_aggregator",
+    "k_ensemble",
+    "metric_best_model",
+    "reduction_best_model"
   ]
 }
