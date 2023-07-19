@@ -28,5 +28,14 @@ RUN mkdir -p /opt/code/Hive_ML \
   && pip install -r requirements.txt  --pre
 
 WORKDIR /opt/code/Hive_ML
-COPY . .
+COPY ./Hive_ML ./Hive_ML
+COPY    ./MLproject .
+COPY    ./Hive_ML_scripts ./Hive_ML_scripts
+COPY    ./VERSION .
+COPY    ./setup.py .
+COPY    ./main.py .
+COPY    ./README.md .
+COPY    ./requirements.txt .
+COPY ./docs/source/apidocs/configs/Hive_ML_config_template.json ./docs/source/apidocs/configs/Hive_ML_config_template.json
+
 RUN pip install -v -e .
