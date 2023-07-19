@@ -14,7 +14,6 @@ from sklearn.decomposition import PCA
 from os import PathLike
 from typing import List, Dict, Union
 from pandas import DataFrame
-from pandas.core.indexes.multi import MultiIndex
 from typing import Tuple
 from mlxtend.feature_selection import SequentialFeatureSelector as SFS
 from Hive_ML.training.model_trainer import model_fit_and_predict
@@ -52,7 +51,7 @@ YB_VISUALIZERS = {
 
 
 def select_best_classifiers(df_summary: DataFrame, metric: str, reduction: str, k: int = 1) -> Tuple[
-    MultiIndex, np.ndarray]:
+    List[Tuple[str, str]], List[float]]:
     """
     Given a DataFrame containing Validation scores for different Classifiers and Number of Selected Features,
     returns the k-best combinations and their respective reduced score (mean or median over the validation splits).
@@ -72,16 +71,27 @@ def select_best_classifiers(df_summary: DataFrame, metric: str, reduction: str, 
     -------
         Selected best combinations [(N_Features, Classifier), (N_Features, Classifier), ... ] and corresponding reduced validation scores.
     """
-    aggr = df_summary[df_summary["Metric"] == metric].groupby(["N_Features", "Classifier"]).agg(reduction)
+    aggr = df_summary[df_summary["Metric"] == metric][["Value", "Classifier"]].groupby(["Classifier"]).agg(reduction)
 
     aggr = aggr.loc[aggr["Value"].nlargest(k).index]
-    indexes = aggr.index
+    classifiers = aggr.index.values
 
-    best_val_scores = aggr.values
-    n_features, selected_classifier = indexes[0]
-    print(f"Best Configuration: {selected_classifier}-{n_features}, {metric}: {best_val_scores[0][0]}")
+    n_features = []
+    best_val_scores = []
+    for classifier in classifiers:
+        aggr = df_summary[(df_summary["Metric"] == metric) & (df_summary["Classifier"] == classifier)][
+            ["Value", "N_Features"]].groupby(["N_Features"]).agg(
+            reduction)
+        aggr = aggr.loc[aggr["Value"].nlargest(1).index]
+        n_features.append(aggr.index.values[0])
+        best_val_scores.append(aggr.values[0][0])
 
-    return indexes, best_val_scores
+    n_features_selected_classifier = [(n_features[i], classifiers[i]) for i in range(len(classifiers))]
+
+    n_features, selected_classifier = n_features_selected_classifier[0]
+    print(f"Best Configuration: {selected_classifier}-{n_features}, {metric}: {best_val_scores[0]}")
+
+    return n_features_selected_classifier, best_val_scores
 
 
 def evaluate_classifiers(ensemble_configuration_df: DataFrame, classifier_kwargs_list: List[Dict],
@@ -91,7 +101,7 @@ def evaluate_classifiers(ensemble_configuration_df: DataFrame, classifier_kwargs
                          feature_selection: str,
                          visualizers: List[Dict] = None,
                          output_file: Union[str, PathLike] = None,
-                         plot_title: str = "") -> Dict:
+                         plot_title: str = "", random_state=None) -> Dict:
     """
     Evaluate ensemble Classification performance of provided classifiers, weighting and combining the single classifier predictions.
     If a list of YellowBrick Visualizers is provided, generates a single multi-plot report file.
@@ -128,7 +138,7 @@ def evaluate_classifiers(ensemble_configuration_df: DataFrame, classifier_kwargs
     """
     fig, axs = plt.subplots(int(len(visualizers)), int(ensemble_configuration_df.shape[0]),
                             figsize=(
-                            int(ensemble_configuration_df.shape[0]) * 10 * 1.5, int(len(visualizers)) * 10 * 1),
+                                int(ensemble_configuration_df.shape[0]) * 10 * 1.5, int(len(visualizers)) * 10 * 1),
                             squeeze=False)
 
     visualgrid = []
@@ -150,7 +160,7 @@ def evaluate_classifiers(ensemble_configuration_df: DataFrame, classifier_kwargs
         classifier, n_features = classifier_configuration[1]["Classifier"], classifier_configuration[1][
             "N_Features"]
 
-        clf = MODELS[classifier](**classifier_kwargs)
+        clf = MODELS[classifier](**classifier_kwargs, random_state=random_state)
 
         x_train, y_train, x_test, y_test = prepare_features(train_feature_set, train_label_set, None, aggregation, None,
                                                             test_feature_set, test_label_set)
