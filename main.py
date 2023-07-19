@@ -7,8 +7,26 @@ from pathlib import Path
 
 import click
 import mlflow
+from jsonschema import Draft201909Validator
 
 import Hive_ML.configs
+
+
+def check_json_config(config_dict):
+    with open("docs/source/apidocs/configs/Hive_ML_config_template.json", "r") as f:
+        schema = json.load(f)
+
+    validator = Draft201909Validator(schema)
+
+    errors = sorted(validator.iter_errors(config_dict), key=lambda e: e.path)
+
+    if len(errors) == 0:
+        return True
+    else:
+        print("Found errors while validating JSON Configuration file: ")
+        for error in errors:
+            print(error.message)
+        return False
 
 
 def inject_known_hosts():
@@ -64,6 +82,8 @@ def workflow(data_folder, config_file, experiment_name, radiomic_config_file):
             with open(json_path) as json_file:
                 config_dict = json.load(json_file)
 
+    if not check_json_config(config_dict):
+        return
     with mlflow.start_run(run_id=os.environ["MLFLOW_RUN_ID"]) as run:
 
         start_time = time.time()

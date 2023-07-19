@@ -1,4 +1,4 @@
-name: dce-mri-radiomics
+name: hive-ml
 
 entry_points:
    main:
