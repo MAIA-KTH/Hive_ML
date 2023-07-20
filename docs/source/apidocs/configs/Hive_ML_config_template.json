@@ -3,7 +3,10 @@
   "description": "A JSON template used to set the configuration parameters for experiments based on Hive-ML framework.",
   "properties": {
     "image_suffix": {
-      "type": "array",
+      "type": [
+        "string",
+        "array"
+      ],
       "description": "File suffix (or list of File suffixes) of the files containing the image volume. Example: \"_image.nii.gz\""
     },
     "mask_suffix": {
@@ -74,7 +77,6 @@
     "n_features",
     "n_folds",
     "random_seed",
-    "perfusion_maps",
     "feature_aggregator",
     "k_ensemble",
     "metric_best_model",
