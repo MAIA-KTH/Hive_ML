@@ -7,7 +7,7 @@ from pathlib import Path
 
 import click
 import mlflow
-from jsonschema import Draft201909Validator
+from jsonschema import Draft7Validator
 
 import Hive_ML.configs
 
@@ -16,7 +16,7 @@ def check_json_config(config_dict):
     with open("docs/source/apidocs/configs/Hive_ML_config_template.json", "r") as f:
         schema = json.load(f)
 
-    validator = Draft201909Validator(schema)
+    validator = Draft7Validator(schema)
 
     errors = sorted(validator.iter_errors(config_dict), key=lambda e: e.path)
 
