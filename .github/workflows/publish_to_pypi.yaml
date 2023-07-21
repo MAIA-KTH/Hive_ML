@@ -1,6 +1,7 @@
 name: Publish Python 🐍 distributions 📦 to PyPI
 
-on: push
+on:
+  push:
     branches:
       - master
       
@@ -8,7 +9,7 @@ jobs:
   build-n-publish:
     name: Build and publish Python 🐍 distributions 📦 to PyPI
     runs-on: ubuntu-latest
-  steps:
+    steps:
     - uses: actions/checkout@v3
     - name: Set up Python
       uses: actions/setup-python@v4
