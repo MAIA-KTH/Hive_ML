@@ -22,6 +22,6 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
           body: |
-            Release 1.0.alpha0
+            Release 1.0.a
           draft: false
           prerelease: false
