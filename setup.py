@@ -30,7 +30,7 @@ setup(
     version=version,
     url="",
     license="",
-    author="Astaraki Mehdi, Bendazzoli Simone",
+    author="Bendazzoli Simone",
     author_email="simben@kth.se",
     description="Python package to run Machine Learning Experiments, within the Hive Framework.",  # noqa: E501
     packages=setuptools.find_packages(),
