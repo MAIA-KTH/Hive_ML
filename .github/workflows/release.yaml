@@ -29,8 +29,8 @@ jobs:
             Release 1.0.a
           draft: false
           prerelease: false
-      - name: Upload Release Asset
-        id: upload-release-asset
+      - name: Upload Release Asset Tar
+        id: upload-release-asset-tar
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -39,8 +39,8 @@ jobs:
           asset_path: ./dist/Hive_ML-1.0a0.tar.gz
           asset_name: Hive_ML-1.0a0.tar.gz
           asset_content_type: application/gzip
-      - name: Upload Release Asset
-        id: upload-release-asset
+      - name: Upload Release Asset Whl
+        id: upload-release-asset-whl
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
