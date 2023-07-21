@@ -13,6 +13,7 @@ Welcome to Hive documentation!
    apidocs/Hive_ML
    apidocs/scripts
    apidocs/configs
+   apidocs/tutorials
 
 
 
