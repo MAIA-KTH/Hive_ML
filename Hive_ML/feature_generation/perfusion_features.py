@@ -258,8 +258,8 @@ def extract_mtt(array: numpy.ndarray, acc: str = "max"):
     m = importlib.import_module("numpy")
     acc_fn = getattr(m, acc)
 
-    cbf_map = acc_fn(gradient_image, axis=0).astype(np.float)
-    cbv_map = np.sum(array, axis=0).astype(np.float)
+    cbf_map = acc_fn(gradient_image, axis=0).astype(float)
+    cbv_map = np.sum(array, axis=0).astype(float)
 
     mtt_map = np.divide(cbv_map, cbf_map, out=np.zeros_like(cbv_map), where=cbf_map != 0)
 
