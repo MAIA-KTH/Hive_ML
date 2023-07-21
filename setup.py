@@ -28,10 +28,17 @@ def read_file(file):
 setup(
     name="Hive_ML",
     version=version,
-    url="",
-    license="",
+    url="https://github.com/MAIA-KTH/Hive_ML.git",
+    license="GPLv3",
+    project_urls={
+        "Documentation": "https://hive-ml.readthedocs.io",
+        "Source": "https://github.com/MAIA-KTH/Hive_ML",
+        "Tracker": "https://github.com/MAIA-KTH/Hive_ML/issues",
+    },
     author="Bendazzoli Simone",
     author_email="simben@kth.se",
+    long_description=read_file(os.path.join(os.path.dirname(__file__), "README.md")),
+    long_description_content_type="text/markdown",
     description="Python package to run Machine Learning Experiments, within the Hive Framework.",  # noqa: E501
     packages=setuptools.find_packages(),
     package_data={
@@ -49,4 +56,6 @@ setup(
 
         ],
     },
+    keywords=["machine learning", "image classification", "PCR", "medical image analysis", "DCE MRI", "radiomics",
+              "feature selection", "radiodynamics"],
 )
