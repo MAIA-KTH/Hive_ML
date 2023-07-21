@@ -1,4 +1,5 @@
 # Hive-ML
+[![Documentation Status](https://readthedocs.org/projects/hive-ml/badge/?version=latest)](https://hive-ml.readthedocs.io/en/latest/?badge=latest)
 
 **Hive-ML** is a Python Package collecting the tools and scripts to run Machine Learning experiments on Radiological
 Medical Imaging.
