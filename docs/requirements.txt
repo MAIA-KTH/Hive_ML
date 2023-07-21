@@ -6,6 +6,7 @@ sphinx-jsonschema==1.19.1
 myst-parser==2.0.0
 pydata-sphinx-theme==0.13.3
 nbsphinx==0.9.2
+ipython
 numpy==1.25.1
 SimpleITK==2.2.1
 six==1.16.0
