@@ -162,26 +162,3 @@ $ROOT_FOLDER/<EXPERIMENT_ID>
 ![CV](images/CV.png "CV")
 
 Fore more details, follow the Jupyter Notebook Tutorial : [Model Fitting](tutorials/3-Model_Fitting.ipynb)
-## MLFlow
-Set MLFLOW_TRACKING_TOKEN and MLFLOW_TRACKING_URI, ROOT_FOLDER
-
-### Local
-
-### Conda
-
-### Docker
-
-
-## MLFlow 
-
-
-
-mlflow run . -P data_folder=/Data -P config_file=Radiodynamics_config.json -P exp_name=Perfusion_Radiomics -P radiomic_config_file=radiomic_original_params.yaml --docker-args shm-size=2gb --run-name=Perfusion_Radiomics_SFFS_Flat --experiment-name=Perfusion_Radiomics
-## Kubernetes
-mlflow run . --backend kubernetes --backend-config kubernetes_config.json -P exp_name=Perfusion_Radiomics -P data_folder=/Data/breast_dataset -P config_file=Radiodynamics_config.json -P radiomic_config_file=radiomic_original_params.yaml  --experiment-name=Perfusion_Radiomics  --run-name=Perfusion_Radiomics_SFFS_Flat
-
-## Custom Configuration
-
-## Tutorials and Notebooks
-
-## Link to Docs
