@@ -3,7 +3,7 @@ SimpleITK==2.2.1
 six==1.16.0
 hive-maia==1.1.2rc2
 pandas==1.5.3
-pyradiomics==3.0.1
+pyradiomics==3.1.0
 tqdm==4.64.1
 mlflow==2.5.0
 pysftp==0.2.9
