@@ -5,7 +5,8 @@ on:
       - 'v*'
 
 jobs:
-  build:
+  build-test-pypi:
+    name: Build, Test and publish Python 🐍 distributions 📦 to Test PyPI
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -85,8 +86,9 @@ jobs:
         with:
           generate_release_notes: True
 
-  build-n-publish:
-    name: Build and publish Python 🐍 distributions 📦 to PyPI
+  publish-pypi:
+    name: Publish Python 🐍 distributions 📦 to PyPI
+    needs: build-test-pypi
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
