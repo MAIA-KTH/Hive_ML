@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: continuumio/anaconda3
+From: continuumio/anaconda3:2023.03-1
 
 %files
     ./Hive_ML /opt/code/Hive_ML/Hive_ML
@@ -7,7 +7,11 @@ From: continuumio/anaconda3
     ./Hive_ML_scripts /opt/code/Hive_ML
     ./VERSION /opt/code/Hive_ML
     ./setup.py /opt/code/Hive_ML
+    ./setup.cfg /opt/code/Hive_ML/Hive_ML
+    ./versioneer.py /opt/code/Hive_ML/Hive_ML
+    ./.gitattributes /opt/code/Hive_ML/Hive_ML
     ./main.py /opt/code/Hive_ML
+    ./MANIFEST.in /opt/code/Hive_ML
     ./README.md /opt/code/Hive_ML
     ./requirements.txt /opt/code/Hive_ML
     ./docs/source/apidocs/configs/Hive_ML_config_template.json /opt/code/Hive_ML/docs/source/apidocs/configs/Hive_ML_config_template.json
