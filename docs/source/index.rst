@@ -1,6 +1,6 @@
 .. k8s_DP documentation master file, created by
 
-Welcome to Hive documentation!
+Welcome to Hive-ML documentation!
 ==================================
 
 .. include:: README.md

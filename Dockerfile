@@ -13,7 +13,7 @@
 #limitations under the License.
 
 # Contains pytorch, torchvision, cuda, cudnn
-FROM continuumio/anaconda3
+FROM continuumio/anaconda3:2023.03-1
 
 
 # Install some tools
@@ -31,11 +31,14 @@ WORKDIR /opt/code/Hive_ML
 COPY ./Hive_ML ./Hive_ML
 COPY    ./MLproject .
 COPY    ./Hive_ML_scripts ./Hive_ML_scripts
-COPY    ./VERSION .
+COPY    ./setup.cfg .
+COPY    ./versioneer.py .
+COPY    ./.gitattributes .
 COPY    ./setup.py .
 COPY    ./main.py .
+COPY    ./MANIFEST.in .
 COPY    ./README.md .
 COPY    ./requirements.txt .
 COPY ./docs/source/apidocs/configs/Hive_ML_config_template.json ./docs/source/apidocs/configs/Hive_ML_config_template.json
 
-RUN pip install -v -e .
+RUN python setup.py install
