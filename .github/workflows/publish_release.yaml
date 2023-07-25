@@ -29,6 +29,7 @@ jobs:
           cd "$tmp_dir"
           ls -al
           
+          python -m pip install -r requirements.txt
           # install from tar.gz
           python -m pip install Hive_ML*.tar.gz
           python -c 'import Hive_ML; print(Hive_ML.__version__) ' 2>&1 | grep -iv "unknown"
