@@ -51,8 +51,8 @@ def get_config() -> VersioneerConfig:
     cfg = VersioneerConfig()
     cfg.VCS = "git"
     cfg.style = "pep440"
-    cfg.tag_prefix = ""
-    cfg.parentdir_prefix = ""
+    cfg.tag_prefix = "v"
+    cfg.parentdir_prefix = "Hive_ML-"
     cfg.versionfile_source = "Hive_ML/_version.py"
     cfg.verbose = False
     return cfg
