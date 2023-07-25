@@ -61,7 +61,7 @@ jobs:
         name: Check artifacts
         run: |
           ls -al dist/
-          rm dist/monai*.tar.gz
+          rm dist/Hive_ML*.tar.gz
           ls -al dist/
 
       - if: startsWith(github.ref, 'refs/tags/')
