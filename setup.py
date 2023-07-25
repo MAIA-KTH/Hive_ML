@@ -28,6 +28,7 @@ setup(
     package_data={
         "": ["configs/*.yml", "configs/*.json","tutorials/*"],
     },
+    zip_safe=False,
     data_files=[('', ["requirements.txt"]), ],
     # package_dir={"": "src"},
     #install_requires=resolve_requirements(os.path.join(os.path.dirname(__file__), "requirements.txt")),
