@@ -22,7 +22,6 @@ from joblib import parallel_backend
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-from tqdm.notebook import tqdm
 from sklearn.metrics import classification_report
 from sklearn.metrics import roc_auc_score
 
@@ -347,7 +346,7 @@ def main():
 
     metric = config_dict["metric_best_model"]
     reduction = config_dict["reduction_best_model"]
-    plot_title = f"{experiment_name} SFFS {aggregation}"
+    plot_title = f"{experiment_name} {feature_selection_method} {aggregation}"
     val_scores = []
 
     features_classifiers, scores = select_best_classifiers(df_summary, metric, reduction, 1)
@@ -383,7 +382,7 @@ def main():
 
         report = evaluate_classifiers(ensemble_configuration, classifier_kwargs_list,
                                       train_feature_set, train_label_set, test_feature_set, test_label_set,
-                                      aggregation, feature_selection, visualizers, output_file, plot_title,
+                                      aggregation, feature_selection_method, visualizers, output_file, plot_title,
                                       config_dict["random_seed"])
 
         roc_auc_val = report[metric]

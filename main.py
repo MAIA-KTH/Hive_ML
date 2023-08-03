@@ -33,18 +33,22 @@ def inject_known_hosts():
     try:
         ssh_path = os.environ["SSH_PATH"]
         Path(ssh_path).mkdir(parents=True, exist_ok=True)
-        host_key = os.environ["MLFLOW_BUCKET_HOSTKEY"]
+
         bucket_hostname = os.environ["MLFLOW_BUCKET_HOSTNAME"]
         bucket_port = os.environ["MLFLOW_BUCKET_PORT"]
         user = os.environ["MLFLOW_BUCKET_USERNAME"]
+
+        bucket_domain = os.environ["MLFLOW_BUCKET_DOMAIN"]
         ssh_key_path = os.environ["MLFLOW_SSH_KEY_PATH"]
 
-        with open(str(Path(ssh_path).joinpath("known_hosts")), "w") as f:
-            subprocess.run(["echo", f"{host_key}"], stdout=f)
+        subprocess.call(
+            ["ssh-keyscan", "-p", bucket_port, bucket_domain, ">>", str(Path(ssh_path).joinpath("known_hosts"))])
+        subprocess.call(["sed", "-i", "-e", f's/\[{bucket_domain}\]:{bucket_port}/{bucket_domain}/g',
+                         str(Path(ssh_path).joinpath("known_hosts"))])
 
         with open(str(Path(ssh_path).joinpath("config")), "w") as f:
             subprocess.run(["echo", f"Host {bucket_hostname}"], stdout=f)
-            subprocess.run(["echo", f"  HostName k8s-maia.com"], stdout=f)
+            subprocess.run(["echo", f"  HostName {bucket_domain}"], stdout=f)
             subprocess.run(["echo", f"  Port {bucket_port}"], stdout=f)
             subprocess.run(["echo", f"  User {user}"], stdout=f)
             subprocess.run(["echo", f"  IdentityFile {ssh_key_path}"], stdout=f)
@@ -98,20 +102,21 @@ def workflow(data_folder, config_file, experiment_name, radiomic_config_file):
             mlflow.log_artifact(str(Path(os.environ["ROOT_FOLDER"]).joinpath(f"{experiment_name}.xlsx")))
         print(f"Hive_ML_extract_radiomics took {time.time() - start_time} s")
 
-        start_time = time.time()
-        _get_or_run(
-            "Hive_ML_feature_selection",
-            {"feature_file": Path(os.environ["ROOT_FOLDER"]).joinpath(f"{experiment_name}.xlsx"),
-             "experiment_name": experiment_name,
-             "config_file": config_file},
-        )
+        if config_dict["feature_selection"] == "SFFS":
+            start_time = time.time()
+            _get_or_run(
+                "Hive_ML_feature_selection",
+                {"feature_file": Path(os.environ["ROOT_FOLDER"]).joinpath(f"{experiment_name}.xlsx"),
+                 "experiment_name": experiment_name,
+                 "config_file": config_file},
+            )
 
-        print(f"Hive_ML_feature_selection took {time.time() - start_time} s")
-        fs_summary_file_path = Path(os.environ["ROOT_FOLDER"]).joinpath(
-            experiment_name, config_dict["feature_selection"], config_dict["feature_aggregator"],
-            "FS", f"{experiment_name}_FS_summary.json")
-        if log_artifacts:
-            mlflow.log_artifact(str(fs_summary_file_path))
+            print(f"Hive_ML_feature_selection took {time.time() - start_time} s")
+            fs_summary_file_path = Path(os.environ["ROOT_FOLDER"]).joinpath(
+                experiment_name, config_dict["feature_selection"], config_dict["feature_aggregator"],
+                "FS", f"{experiment_name}_FS_summary.json")
+            if log_artifacts:
+                mlflow.log_artifact(str(fs_summary_file_path))
 
         start_time = time.time()
         _get_or_run(

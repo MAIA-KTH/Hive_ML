@@ -14,6 +14,8 @@ import os
 import subprocess
 import sys
 
+import Hive_ML
+
 sys.path.insert(0, os.path.abspath("../../Hive_ML_scripts"))
 sys.path.insert(0, os.path.abspath("../../Hive_ML"))
 sys.path.insert(0, os.path.abspath(".."))
@@ -28,7 +30,7 @@ copyright = "2022, Simone Bendazzoli"
 author = "Simone Bendazzoli"
 
 # The full version, including alpha/beta/rc tags
-release = "1.0"
+release = Hive_ML.__version__
 
 exclude_patterns = ["configs"]
 
