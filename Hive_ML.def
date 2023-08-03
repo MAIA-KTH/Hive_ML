@@ -1,0 +1,57 @@
+BootStrap: docker
+From: continuumio/anaconda3:2023.03-1
+%post
+    . /.singularity.d/env/10-docker*.sh
+
+# GNU compiler
+%post
+    apt-get update -y
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        g++ \
+        gcc \
+        gfortran
+    rm -rf /var/lib/apt/lists/*
+
+%setup
+    mkdir -p ${SINGULARITY_ROOTFS}/opt/code/Hive_ML
+%files
+    requirements.txt /opt/code/Hive_ML
+    MLproject /opt/code/Hive_ML
+    setup.cfg /opt/code/Hive_ML
+    versioneer.py /opt/code/Hive_ML
+    .gitattributes /opt/code/Hive_ML
+    setup.py /opt/code/Hive_ML
+    main.py /opt/code/Hive_ML
+    MANIFEST.in /opt/code/Hive_ML
+    README.md /opt/code/Hive_ML
+
+%setup
+    mkdir -p ${SINGULARITY_ROOTFS}/opt/code/Hive_ML/docs/source/apidocs/configs/Hive_ML_config_template.json
+%files
+    ./docs/source/apidocs/configs/Hive_ML_config_template.json /opt/code/Hive_ML/docs/source/apidocs/configs/Hive_ML_config_template.json
+
+%files
+    ./Hive_ML/ /opt/code/Hive_ML/Hive_ML/
+
+%files
+    ./Hive_ML_scripts/ /opt/code/Hive_ML/Hive_ML_scripts/
+
+%post
+    cd /
+    mkdir -p /opt/code/Hive_ML
+    cd /opt/code/Hive_ML
+
+# pip
+%post
+    apt-get update -y
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        
+    rm -rf /var/lib/apt/lists/*
+%post
+    cd /
+    pip --no-cache-dir install /opt/code/Hive_ML
+
+%runscript
+    exec  "$@"
+
+
