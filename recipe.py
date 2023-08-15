@@ -23,7 +23,7 @@ Stage0 += copy(src=[
 Stage0 += copy(src=[
     './Hive_ML/'], dest='/opt/code/Hive_ML/Hive_ML/')
 Stage0 += copy(src=[
-    './Hive_ML_scripts/'], dest='/opt/code/Hive_ML/Hive_ML_scripts/')
+    './scripts/'], dest='/opt/code/Hive_ML/scripts/')
 Stage0 += workdir(directory="/opt/code/Hive_ML")
 Stage0 += pip(ospackages=[""], packages=["/opt/code/Hive_ML"])
 Stage0 += runscript(commands=[''])

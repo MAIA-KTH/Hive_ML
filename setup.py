@@ -1,8 +1,10 @@
 import os
-import versioneer
 
 import setuptools
 from setuptools import setup
+
+import versioneer
+
 
 def resolve_requirements(file):
     requirements = []
@@ -34,10 +36,10 @@ setup(
     #install_requires=resolve_requirements(os.path.join(os.path.dirname(__file__), "requirements.txt")),
     entry_points={
         "console_scripts": [
-            "Hive_ML_extract_radiomics = Hive_ML_scripts.Hive_ML_extract_radiomics:main",
-            "Hive_ML_feature_selection = Hive_ML_scripts.Hive_ML_feature_selection:main",
-            "Hive_ML_generate_perfusion_maps = Hive_ML_scripts.Hive_ML_generate_perfusion_maps:main",
-            "Hive_ML_model_fitting = Hive_ML_scripts.Hive_ML_model_fitting:main",
+            "Hive_ML_extract_radiomics = scripts.Hive_ML_extract_radiomics:main",
+            "Hive_ML_feature_selection = scripts.Hive_ML_feature_selection:main",
+            "Hive_ML_generate_perfusion_maps = scripts.Hive_ML_generate_perfusion_maps:main",
+            "Hive_ML_model_fitting = scripts.Hive_ML_model_fitting:main",
 
         ],
     },
