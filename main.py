@@ -29,34 +29,6 @@ def check_json_config(config_dict):
         return False
 
 
-def inject_known_hosts():
-    try:
-        ssh_path = os.environ["SSH_PATH"]
-        Path(ssh_path).mkdir(parents=True, exist_ok=True)
-
-        bucket_hostname = os.environ["MLFLOW_BUCKET_HOSTNAME"]
-        bucket_port = os.environ["MLFLOW_BUCKET_PORT"]
-        user = os.environ["MLFLOW_BUCKET_USERNAME"]
-
-        bucket_domain = os.environ["MLFLOW_BUCKET_DOMAIN"]
-        ssh_key_path = os.environ["MLFLOW_SSH_KEY_PATH"]
-
-        subprocess.call(
-            ["ssh-keyscan", "-p", bucket_port, bucket_domain, ">>", str(Path(ssh_path).joinpath("known_hosts"))])
-        subprocess.call(["sed", "-i", "-e", f's/\[{bucket_domain}\]:{bucket_port}/{bucket_domain}/g',
-                         str(Path(ssh_path).joinpath("known_hosts"))])
-
-        with open(str(Path(ssh_path).joinpath("config")), "w") as f:
-            subprocess.run(["echo", f"Host {bucket_hostname}"], stdout=f)
-            subprocess.run(["echo", f"  HostName {bucket_domain}"], stdout=f)
-            subprocess.run(["echo", f"  Port {bucket_port}"], stdout=f)
-            subprocess.run(["echo", f"  User {user}"], stdout=f)
-            subprocess.run(["echo", f"  IdentityFile {ssh_key_path}"], stdout=f)
-            return True
-    except:
-        return False
-
-
 def _get_or_run(entrypoint, parameters):
     print("Launching new run for entrypoint={} and parameters={}".format(entrypoint, parameters))
 
@@ -77,7 +49,6 @@ def _get_or_run(entrypoint, parameters):
 @click.option("--radiomic-config-file", type=str)
 def workflow(data_folder, config_file, experiment_name, radiomic_config_file):
     print("Starting Experiment")
-    log_artifacts = inject_known_hosts()
     try:
         with open(config_file) as json_file:
             config_dict = json.load(json_file)
@@ -98,8 +69,7 @@ def workflow(data_folder, config_file, experiment_name, radiomic_config_file):
                                               f"{experiment_name}.xlsx")},
         )
 
-        if log_artifacts:
-            mlflow.log_artifact(str(Path(os.environ["ROOT_FOLDER"]).joinpath(f"{experiment_name}.xlsx")))
+        mlflow.log_artifact(str(Path(os.environ["ROOT_FOLDER"]).joinpath(f"{experiment_name}.xlsx")))
         print(f"Hive_ML_extract_radiomics took {time.time() - start_time} s")
 
         if config_dict["feature_selection"] == "SFFS":
@@ -115,8 +85,8 @@ def workflow(data_folder, config_file, experiment_name, radiomic_config_file):
             fs_summary_file_path = Path(os.environ["ROOT_FOLDER"]).joinpath(
                 experiment_name, config_dict["feature_selection"], config_dict["feature_aggregator"],
                 "FS", f"{experiment_name}_FS_summary.json")
-            if log_artifacts:
-                mlflow.log_artifact(str(fs_summary_file_path))
+
+            mlflow.log_artifact(str(fs_summary_file_path))
 
         start_time = time.time()
         _get_or_run(
@@ -127,11 +97,10 @@ def workflow(data_folder, config_file, experiment_name, radiomic_config_file):
         )
         print(f"Hive_ML_model_fitting took {time.time() - start_time} s")
 
-        if log_artifacts:
-            model_fitting_folder = str(Path(os.environ["ROOT_FOLDER"]).joinpath(
+        model_fitting_folder = str(Path(os.environ["ROOT_FOLDER"]).joinpath(
                 experiment_name))
 
-            mlflow.log_artifact(model_fitting_folder)
+        mlflow.log_artifact(model_fitting_folder)
 
 
 if __name__ == "__main__":
