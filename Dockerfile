@@ -25,7 +25,7 @@ COPY ./docs/source/apidocs/configs/Hive_ML_config_template.json \
 COPY ./Hive_ML/* \
     /opt/code/Hive_ML/Hive_ML/
 
-COPY ./Hive_ML_scripts/* \
+COPY ./scripts/* \
     /opt/code/Hive_ML/Hive_ML_scripts/
 
 WORKDIR /opt/code/Hive_ML

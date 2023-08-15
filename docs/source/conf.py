@@ -16,7 +16,7 @@ import sys
 
 import Hive_ML
 
-sys.path.insert(0, os.path.abspath("../../Hive_ML_scripts"))
+sys.path.insert(0, os.path.abspath("../../scripts"))
 sys.path.insert(0, os.path.abspath("../../Hive_ML"))
 sys.path.insert(0, os.path.abspath(".."))
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
@@ -38,7 +38,7 @@ exclude_patterns = ["configs"]
 def generate_apidocs(*args):
     """Generate API docs automatically by trawling the available modules"""
     module_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../..", "Hive_ML"))
-    scripts_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../..", "Hive_ML_scripts"))
+    scripts_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../..", "scripts"))
     output_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "apidocs"))
     apidoc_command_path = "sphinx-apidoc"
     if hasattr(sys, "real_prefix"):  # called from a virtualenv
