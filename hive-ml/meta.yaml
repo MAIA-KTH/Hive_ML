@@ -1,0 +1,76 @@
+{ % set name = "hive-ml" % }
+  { % set version = "1.0.1" % }
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  url: "https://files.pythonhosted.org/packages/c1/27/5f8eb46ad63911dd5bf092b16d1c80732d1f75a0d5be6c0c82b8cec5e573/Hive_ML-1.0.1.tar.gz"
+  sha256: 91756a8945dcaf5f8d3c60dc67bbb6300d7e1624270dabcccdab3d3b95fdd4f4
+
+build:
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+  number: 0
+  entry_points:
+    - Hive_ML_extract_radiomics = scripts.Hive_ML_extract_radiomics:main
+    - Hive_ML_feature_selection = scripts.Hive_ML_feature_selection:main
+    - Hive_ML_generate_perfusion_maps = scripts.Hive_ML_generate_perfusion_maps:main
+    - Hive_ML_model_fitting = scripts.Hive_ML_model_fitting:main
+
+requirements:
+  host:
+    - pip
+    - python
+    - numpy 1.23.5
+  run:
+    - python
+    - numpy 1.23.5
+    - SimpleITK 2.2.1
+    - six 1.16.0
+    - pandas 1.5.3
+    - tqdm 4.64.1
+    - mlxtend 0.22.0
+    - scikit-learn 1.2.1
+    - scipy 1.10.0
+    - plotly 5.9.0
+    - yellowbrick 1.5
+    - pysftp 0.2.9
+    - mlflow 2.5.0
+    - python-kaleido 0.2.1
+    #- pyradiomics 3.0.1
+
+
+
+  #hive-maia==1.1.2rc2
+  #pyradiomics==3.0.1
+
+
+test:
+  imports:
+    - Hive_ML
+    - Hive_ML.configs
+    - Hive_ML.data_loader
+    - Hive_ML.evaluation
+    - Hive_ML.extraction
+    - Hive_ML.feature_generation
+    - Hive_ML.training
+    - Hive_ML.utilities
+  #commands:
+  #  - Hive_ML_extract_radiomics --help
+  #  - Hive_ML_feature_selection --help
+  #  - Hive_ML_generate_perfusion_maps --help
+  #  - Hive_ML_model_fitting --help
+
+about:
+  home: https://github.com/MAIA-KTH/Hive_ML
+  license: GPLv3
+  license_family: GPL3
+  license_file:
+  summary: "Python package to run Machine Learning Experiments, within the Hive Framework."
+  doc_url: https://hive-ml.readthedocs.io
+  dev_url: https://github.com/MAIA-KTH/Hive_ML
+
+extra:
+  recipe-maintainers:
+    - SimoneBendazzoli93
