@@ -1,5 +1,23 @@
 # Hive-ML
 
+[![Documentation Status](https://readthedocs.org/projects/hive-ml/badge/?version=stable)](https://hive-ml.readthedocs.io/en/latest/?badge=latest)
+![GitHub Release Date - Published_At](https://img.shields.io/github/release-date/MAIA-KTH/Hive_ML?logo=github)
+![GitHub contributors](https://img.shields.io/github/contributors/MAIA-KTH/Hive_ML?logo=github)
+![GitHub top language](https://img.shields.io/github/languages/top/MAIA-KTH/Hive_ML?logo=github)
+![GitHub language count](https://img.shields.io/github/languages/count/MAIA-KTH/Hive_ML?logo=github)
+![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/MAIA-KTH/Hive_ML/publish_release.yaml?logo=github)
+![GitHub all releases](https://img.shields.io/github/downloads/MAIA-KTH/Hive_ML/total?logo=github)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/hive-ml?logo=pypi)
+![GitHub](https://img.shields.io/github/license/MAIA-KTH/Hive_ML?logo=github)
+![PyPI - License](https://img.shields.io/pypi/l/hive-ml?logo=pypi)
+
+![Conda](https://img.shields.io/conda/pn/MAIA-KTH/Hive-ml?logo=anaconda)
+![Conda](https://img.shields.io/conda/v/MAIA-KTH/Hive-ml?logo=anaconda)
+
+![GitHub repo size](https://img.shields.io/github/repo-size/MAIA-KTH/Hive_ML?logo=github)
+![GitHub release (with filter)](https://img.shields.io/github/v/release/MAIA-KTH/Hive_ML?logo=github)
+![PyPI](https://img.shields.io/pypi/v/hive-ml?logo=pypi)
+
 **Hive-ML** is a Python Package collecting the tools and scripts to run Machine Learning experiments on Radiological
 Medical Imaging.
 
@@ -11,6 +29,11 @@ To install Hive-ML:
 pip install hive-ml
 ```
 
+or :
+
+```shell
+conda install -c maia-kth hive-ml
+```
 or from GitHub:
 
 ```shell
