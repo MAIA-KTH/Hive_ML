@@ -55,8 +55,8 @@ with the corresponding set of instructions to easily reproduce the experiments.
 Finally, **Hive-ML** also support model serving through **MLFlow**, to provide easy access to the trained classifier
 for future usage in model prediction.
 
-#In the tutorial explained below, Hive-ML is used to predict the Pathological Complete Response after a Neo-Adjuvant
-#chemotherapy, from DCE-MRI.
+In the tutorial explained below, Hive-ML is used to predict the Pathological Complete Response after a Neo-Adjuvant
+chemotherapy, from DCE-MRI.
 
 ## Usage
 
