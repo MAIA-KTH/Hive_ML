@@ -1,6 +1,6 @@
 # Hive-ML
 
-[![Documentation Status](https://readthedocs.org/projects/hive-ml/badge/?version=stable)](https://hive-ml.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/hive-ml/badge/?version=stable)](https://hive-ml.readthedocs.io/en/stable/?badge=stable)
 ![GitHub Release Date - Published_At](https://img.shields.io/github/release-date/MAIA-KTH/Hive_ML?logo=github)
 ![GitHub contributors](https://img.shields.io/github/contributors/MAIA-KTH/Hive_ML?logo=github)
 ![GitHub top language](https://img.shields.io/github/languages/top/MAIA-KTH/Hive_ML?logo=github)
