@@ -1,10 +1,9 @@
-from typing import Tuple, List, Any
-
 import numpy
 import numpy as np
 from pandas import DataFrame
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
+from typing import Tuple, List, Any
 
 
 def get_feature_set_details(feature_set: DataFrame) -> Tuple[List[Any], List[Any], List[Any], List[Any]]:
@@ -135,7 +134,8 @@ def flatten_4D_features(feature_list: List[List[Any]], feature_names: List[str])
         return feature_list, feature_names
 
 
-def data_shuffling(feature_set: numpy.ndarray, label_set: numpy.ndarray, seed_val: int) -> Tuple[
+def data_shuffling(feature_set: numpy.ndarray, label_set: numpy.ndarray, seed_val: int, test_size: float = 0.2) -> \
+Tuple[
     numpy.ndarray, numpy.ndarray, numpy.ndarray, numpy.ndarray]:
     """
     Function to randomly shuffle the feature set and the corresponding label set along the subject dimension.
@@ -148,13 +148,14 @@ def data_shuffling(feature_set: numpy.ndarray, label_set: numpy.ndarray, seed_va
         Label set to shuffle.
     seed_val    :
         Random seed generator.
-
+    test_size   :
+        Proportion of dataset to include in the Test set. Defaults to 0.2.
     Returns
     -------
         Shuffled Feature set and Label Set
     """
     X_train, X_test, y_train, y_test = train_test_split(
-        feature_set, label_set, test_size=0.2, random_state=seed_val, stratify=label_set)
+        feature_set, label_set, test_size=test_size, random_state=seed_val, stratify=label_set)
 
     return X_train, y_train, X_test, y_test
 

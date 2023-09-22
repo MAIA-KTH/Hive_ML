@@ -3,22 +3,21 @@
 import datetime
 import importlib.resources
 import json
-import os
-import warnings
-from argparse import ArgumentParser, RawTextHelpFormatter
-from pathlib import Path
-from textwrap import dedent
-
 import numpy as np
+import os
 import pandas as pd
 import plotly.express as px
+import warnings
 from Hive.utils.log_utils import (
     get_logger,
     add_verbosity_options_to_argparser,
     log_lvl_from_verbosity_args,
 
 )
+from argparse import ArgumentParser, RawTextHelpFormatter
 from joblib import parallel_backend
+from pathlib import Path
+from textwrap import dedent
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -158,13 +157,17 @@ def main():
 
     label_set = np.array(subject_labels)
 
+    if "test_size" not in config_dict:
+        config_dict["test_size"] = 0.2
+
     if aggregation.endswith("Norm"):
         features = feature_set
 
         feature_set_3D = np.array(features).squeeze(-2)
 
         train_feature_set, train_label_set, test_feature_set, test_label_set = data_shuffling(
-            np.swapaxes(feature_set_3D, 0, 1), label_set, config_dict["random_seed"])
+            np.swapaxes(feature_set_3D, 0, 1), label_set, config_dict["random_seed"],
+            test_size=config_dict["test_size"])
 
     else:
 
@@ -194,7 +197,9 @@ def main():
 
         train_feature_set, train_label_set, test_feature_set, test_label_set = data_shuffling(feature_set, label_set,
                                                                                               config_dict[
-                                                                                                  "random_seed"])
+                                                                                                  "random_seed"],
+                                                                                              test_size=config_dict[
+                                                                                                  "test_size"])
 
     experiment_name = arguments["experiment_name"]
 
@@ -376,21 +381,24 @@ def main():
         ensemble_configuration = pd.DataFrame.from_records(ensemble_configuration_df)
 
         print(ensemble_configuration)
+        ensemble_configuration.to_excel(
+            Path(os.environ["ROOT_FOLDER"]).joinpath(experiment_name, f"{plot_title}_TOP_{k}.xlsx"))
         output_file = str(Path(os.environ["ROOT_FOLDER"]).joinpath(
             experiment_name,
             f"{experiment_name} {feature_selection_method} {aggregation} {reduction}_{k}.png"))
 
-        report = evaluate_classifiers(ensemble_configuration, classifier_kwargs_list,
-                                      train_feature_set, train_label_set, test_feature_set, test_label_set,
-                                      aggregation, feature_selection_method, visualizers, output_file, plot_title,
-                                      config_dict["random_seed"])
+        if len(test_feature_set) > 0:
+            report = evaluate_classifiers(ensemble_configuration, classifier_kwargs_list,
+                                          train_feature_set, train_label_set, test_feature_set, test_label_set,
+                                          aggregation, feature_selection_method, visualizers, output_file, plot_title,
+                                          config_dict["random_seed"])
 
-        roc_auc_val = report[metric]
+            roc_auc_val = report[metric]
 
-        val_scores.append(
-            {"Metric": metric,
-             "Experiment": experiment_name,
-             "Score": roc_auc_val, "Section": f"Test Set [k={k}]"})
+            val_scores.append(
+                {"Metric": metric,
+                 "Experiment": experiment_name,
+                 "Score": roc_auc_val, "Section": f"Test Set [k={k}]"})
 
     val_scores = pd.DataFrame.from_records(val_scores)
     val_scores.to_excel(Path(os.environ["ROOT_FOLDER"]).joinpath(experiment_name, f"{plot_title}.xlsx"))

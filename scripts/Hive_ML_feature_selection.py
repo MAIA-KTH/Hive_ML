@@ -3,12 +3,8 @@
 import datetime
 import importlib.resources
 import json
-import os
-from argparse import ArgumentParser, RawTextHelpFormatter
-from pathlib import Path
-from textwrap import dedent
-
 import numpy as np
+import os
 import pandas as pd
 from Hive.utils.log_utils import (
     get_logger,
@@ -16,9 +12,12 @@ from Hive.utils.log_utils import (
     log_lvl_from_verbosity_args,
 
 )
+from argparse import ArgumentParser, RawTextHelpFormatter
 from joblib import parallel_backend
 from mlxtend.feature_selection import SequentialFeatureSelector as SFS
+from pathlib import Path
 from sklearn.model_selection import StratifiedKFold
+from textwrap import dedent
 from tqdm import tqdm
 
 import Hive_ML.configs
@@ -145,13 +144,16 @@ def main():
 
     label_set = np.array(subject_labels)
 
+    if "test_size" not in config_dict:
+        config_dict["test_size"] = 0.2
     if aggregation.endswith("Norm"):
         features = feature_set
 
         feature_set_3D = np.array(features).squeeze(-2)
 
         train_feature_set, train_label_set, test_feature_set, test_label_set = data_shuffling(
-            np.swapaxes(feature_set_3D, 0, 1), label_set, config_dict["random_seed"])
+            np.swapaxes(feature_set_3D, 0, 1), label_set, config_dict["random_seed"],
+            test_size=config_dict["test_size"])
 
     else:
 
@@ -182,7 +184,9 @@ def main():
 
         train_feature_set, train_label_set, test_feature_set, test_label_set = data_shuffling(feature_set, label_set,
                                                                                               config_dict[
-                                                                                                  "random_seed"])
+                                                                                                  "random_seed"],
+                                                                                              test_size=config_dict[
+                                                                                                  "test_size"])
 
     experiment_name = arguments["experiment_name"]
 
