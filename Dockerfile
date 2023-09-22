@@ -20,13 +20,13 @@ COPY requirements.txt \
     /opt/code/Hive_ML/
 
 COPY ./docs/source/apidocs/configs/Hive_ML_config_template.json \
-    /opt/code/Hive_ML/docs/source/apidocs/configs/Hive_ML_config_template.json/
+    /opt/code/Hive_ML/docs/source/apidocs/configs/Hive_ML_config_template.json
 
-COPY ./Hive_ML/* \
+COPY ./Hive_ML/ \
     /opt/code/Hive_ML/Hive_ML/
 
 COPY ./scripts/* \
-    /opt/code/Hive_ML/Hive_ML_scripts/
+    /opt/code/Hive_ML/scripts/
 
 WORKDIR /opt/code/Hive_ML
 
@@ -35,7 +35,7 @@ RUN apt-get update -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
          && \
     rm -rf /var/lib/apt/lists/*
-RUN pip --no-cache-dir install /opt/code/Hive_ML
+RUN pip --no-cache-dir install -e /opt/code/Hive_ML
 
 ENTRYPOINT []
 
