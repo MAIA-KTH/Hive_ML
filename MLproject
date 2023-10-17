@@ -8,3 +8,9 @@ entry_points:
       exp_name: string
       radiomic_config_file: string
     command: "python main.py --data-folder {data_folder} --config-file {config_file} --experiment-name {exp_name} --radiomic-config-file {radiomic_config_file}"
+   ensemble:
+    parameters:
+      config_file: string
+      exp_name: string
+      ensemble_config: string
+    command: "python main.py --config-file {config_file} --experiment-name {exp_name} --ensemble-config {ensemble_config}"

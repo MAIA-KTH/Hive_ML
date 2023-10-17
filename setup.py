@@ -1,5 +1,4 @@
 import os
-
 import setuptools
 from setuptools import setup
 
@@ -40,6 +39,7 @@ setup(
             "Hive_ML_feature_selection = scripts.Hive_ML_feature_selection:main",
             "Hive_ML_generate_perfusion_maps = scripts.Hive_ML_generate_perfusion_maps:main",
             "Hive_ML_model_fitting = scripts.Hive_ML_model_fitting:main",
+            "Hive_ML_ensemble_models = scripts.Hive_ML_ensemble_models:main",
 
         ],
     },
