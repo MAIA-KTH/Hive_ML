@@ -26,15 +26,15 @@ From: continuumio/anaconda3:2023.03-1
     README.md /opt/code/Hive_ML
 
 %setup
-    mkdir -p ${SINGULARITY_ROOTFS}/opt/code/Hive_ML/docs/source/apidocs/configs/Hive_ML_config_template.json
+    mkdir -p ${SINGULARITY_ROOTFS}/opt/code/Hive_ML/docs/source/apidocs/configs
 %files
-    ./docs/source/apidocs/configs/Hive_ML_config_template.json /opt/code/Hive_ML/docs/source/apidocs/configs/Hive_ML_config_template.json
+    ./docs/source/apidocs/configs/Hive_ML_config_template.json /opt/code/Hive_ML/docs/source/apidocs/configs/
 
 %files
-    ./Hive_ML/ /opt/code/Hive_ML/Hive_ML/
+    ./Hive_ML/ /opt/code/Hive_ML/
 
 %files
-    ./Hive_ML_scripts/ /opt/code/Hive_ML/Hive_ML_scripts/
+    ./scripts/ /opt/code/Hive_ML/
 
 %post
     cd /
@@ -49,7 +49,7 @@ From: continuumio/anaconda3:2023.03-1
     rm -rf /var/lib/apt/lists/*
 %post
     cd /
-    pip --no-cache-dir install /opt/code/Hive_ML
+    pip --no-cache-dir install -e /opt/code/Hive_ML
 
 %runscript
     exec  "$@"

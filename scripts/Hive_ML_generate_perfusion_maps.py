@@ -3,11 +3,6 @@
 import importlib.resources
 import json
 import os
-from argparse import ArgumentParser, RawTextHelpFormatter
-from multiprocessing import Pool
-from pathlib import Path
-from textwrap import dedent
-
 from Hive.utils.file_utils import subfolders
 from Hive.utils.log_utils import (
     get_logger,
@@ -15,6 +10,10 @@ from Hive.utils.log_utils import (
     log_lvl_from_verbosity_args,
     DEBUG
 )
+from argparse import ArgumentParser, RawTextHelpFormatter
+from multiprocessing import Pool
+from pathlib import Path
+from textwrap import dedent
 from tqdm import tqdm
 
 import Hive_ML.configs

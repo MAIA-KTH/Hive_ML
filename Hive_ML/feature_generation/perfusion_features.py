@@ -1,12 +1,11 @@
+import SimpleITK as sitk
 import copy
 import importlib
-from pathlib import Path
-from typing import Union
-
-import SimpleITK as sitk
 import numpy
 import numpy as np
+from pathlib import Path
 from scipy.ndimage.morphology import distance_transform_edt
+from typing import Union
 
 
 def generate_distance_map(image_filename: Union[str, Path], mask_filename: Union[str, Path],

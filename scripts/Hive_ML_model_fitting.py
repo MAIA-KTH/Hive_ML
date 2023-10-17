@@ -387,7 +387,7 @@ def main():
             experiment_name,
             f"{experiment_name} {feature_selection_method} {aggregation} {reduction}_{k}.png"))
 
-        if len(test_feature_set) > 0:
+        if test_feature_set is not None:
             report = evaluate_classifiers(ensemble_configuration, classifier_kwargs_list,
                                           train_feature_set, train_label_set, test_feature_set, test_label_set,
                                           aggregation, feature_selection_method, visualizers, output_file, plot_title,

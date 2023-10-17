@@ -1,9 +1,8 @@
+import SimpleITK as sitk
+from SimpleITK import Image
 from os import PathLike
 from pathlib import Path
 from typing import Union, List, Tuple
-
-import SimpleITK as sitk
-from SimpleITK import Image
 
 
 def get_3D_image_sequence_list_from_4D_image(image_filename: Union[str, PathLike]) -> List[Image]:
