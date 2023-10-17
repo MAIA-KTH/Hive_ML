@@ -3,6 +3,7 @@ import numpy as np
 from pandas import DataFrame
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
+from sklearn.utils import shuffle
 from typing import Tuple, List, Any
 
 
@@ -154,8 +155,11 @@ Tuple[
     -------
         Shuffled Feature set and Label Set
     """
+    if float(test_size) == 0:
+        X_train, y_train = shuffle(feature_set, label_set, random_state=seed_val)
+        return X_train, y_train, None, None
     X_train, X_test, y_train, y_test = train_test_split(
-        feature_set, label_set, test_size=test_size, random_state=seed_val, stratify=label_set)
+        feature_set, label_set, test_size=float(test_size), random_state=seed_val, stratify=label_set)
 
     return X_train, y_train, X_test, y_test
 
